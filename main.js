@@ -1,45 +1,50 @@
-//browser loads hmtml > browser loads js > js to open modal > user presses ok on mdal > modal closes > audio init
-// document.body.style.backgroundColor = "red";
-// find my test button
+// browser loads HTML
+// browser loads JS
+// JS opens modal
+// user presses OK on modal
+// modal closes
+// audio initializes
+
+
+// Find my test button
 const testButton = document.getElementById("test-button");
-//find our intro modal
-const intromodal = document.getElementById("intro-model");
-//console.log("introModal");
-//console.log("test");
-//console.log(1 + 2)
-//findnmodal close button
-const introModalCloseButton = document.getElementById("intro-moda-clsoe");
 
-////// Modal
-// show Modal on page
+// Find our intro modal
+const introModal = document.getElementById("intro-modal");
 
+// Find modal close button
+const introModalCloseButton = document.getElementById("intro-modal-close");
+
+
+// ////// Modal
+
+// Show modal on page
 introModal.showModal();
-// when ok clicked, close modal
-introModalCloseButton.addEvenListener("click", function closeIntroModal(){ 
-  //close our modal
-  intromodal.closest();
+
+// When OK is clicked, close modal
+introModalCloseButton.addEventListener("click", function closeIntroModal() {
+  // Close our modal
+  introModal.close();
 });
 
-introModal.addEventlistener("close", toneInit);
-
-////////Tone
-
+// When modal closes, initialize Tone
+introModal.addEventListener("close", toneInit);
 
 
-//create instrument 
-const synth = new TouchEvent.Synth()
+// ////// Tone
 
-function toneInit(){
-  // connect synth to audio output
+// Create instrument
+const synth = new Tone.Synth();
+
+function toneInit() {
+  // Connect synth to audio output
   synth.toDestination();
-
-
 }
 
 
-// do something when we click thay button
-testbutton.addEventlistener("click", playTestNote);
+// Do something when we click that button
+testButton.addEventListener("click", playTestNote);
 
-function playTestNote(){
-  synth.triggerAttackRelease("C4", "8n"); 
+function playTestNote() {
+  synth.triggerAttackRelease("C4", "8n");
 }
