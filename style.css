@@ -1,40 +1,53 @@
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap");
 
+/* Custom colours */
 
-/* Saving our custom variables */
-
-/* Light mode */
 :root {
-  --colour-01: #7dd87d;
-  --colour-02: #4c9173;
-  --colour-03: #5b446a;
-  --colour-04: #906387;
-  --border: 0.5rem inset var(--colour-03);
+    --colour-01: #7dd87d;
+    --colour-02: #4c9173;
+    --colour-03: #5b446a;
+    --colour-04: #906387;
+    --border: 0.5rem inset var(--colour-03);
 }
-
-
-/* Dark mode */
-/* @media (prefers-color-scheme: dark) {
-  :root {
-    --colour-01: white;
-    --colour-02: black;
-    --colour-03: lightgrey;
-    --colour-04: darkgrey;
-  }
-} */
 
 
 /* Body */
+
 body {
-  font-family: "IBM Plex Mono", monospace;
+    font-family: "IBM Plex Mono", monospace;
 }
 
+
+/* Intro modal */
+
 dialog[open] {
-  width: 60%;
-  max-width: 600px;
-  padding: 2rem;
-  border: var(--border);
-  background-color: var(--colour-02);
-  color: var(--colour-01);
-  font-family: "IBM Plex Mono", monospace;
+    width: 60%;
+    max-width: 600px;
+    padding: 2rem;
+
+    border: var(--border);
+
+    background-color: var(--colour-02);
+    color: var(--colour-01);
+
+    font-family: "IBM Plex Mono", monospace;
 }
+
+
+/* Buttons */
+
+button {
+    border: var(--border);
+}
+
+
+/* Piano keys */
+
+.whiteKey {
+    cursor: pointer;
+}
+
+.whiteKey:hover {
+    background-color: red;
+}
+
