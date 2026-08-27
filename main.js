@@ -115,3 +115,18 @@ testButton.addEventListener("mouseenter", playNote);
 key.addEventListener("mousedown", playNote);
 key.addEventListener("mouseup", endNote);
 key.addEventListener("mouseleave", endNote);
+
+
+//audio file playback
+const playbackbutton = document.getElementById("playback-button");
+const audioTrack = document .getElementById("audio-track");
+
+function playAudio(){
+    if(audioTrack.paused === true){
+    audioTrack.play();
+    }
+    audioTrack.pause();
+
+}
+
+playbackbutton.addEventListener("click, playPauseAudio")
