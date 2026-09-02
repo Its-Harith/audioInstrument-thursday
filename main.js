@@ -26,15 +26,11 @@ let mouseButtonDown = false;
 // Mouse
 
 window.addEventListener("mousedown", function() {
-
-    mouseButtonDown = true;
-
+  mouseButtonDown = true;
 });
 
 window.addEventListener("mouseup", function() {
-
-    mouseButtonDown = false;
-
+  mouseButtonDown = false;
 });
 
 
@@ -45,10 +41,8 @@ introModal.showModal();
 
 // When OK is clicked, close modal
 introModalCloseButton.addEventListener("click", function closeIntroModal() {
-
-    // Close our modal
-    introModal.close();
-
+  // Close our modal
+  introModal.close();
 });
 
 // When modal closes, initialize Tone
@@ -61,46 +55,33 @@ introModal.addEventListener("close", toneInit);
 const synth = new Tone.PolySynth();
 
 function toneInit() {
-
-    // Connect synth to audio output
-    synth.toDestination();
-
+  // Connect synth to audio output
+  synth.toDestination();
 }
 
 
 function playNote(e) {
+  // Find the element that the event ran on
+  let keyPressed = e.target;
 
-    // Find the element that the event ran on
-    let keyPressed = e.target;
+  // Find the data-note attribute of that element
+  let note = keyPressed.dataset.note;
 
-    console.log(keyPressed);
-
-    // Find the data-note attribute of that element
-    let note = keyPressed.dataset.note;
-
-    console.log(note);
-
-    // Play the note
-    synth.triggerAttack(note);
-
+  // Play the note
+  synth.triggerAttack(note);
 }
 
+function playImageNote(e){}
 
 function endNote(e) {
+  // Find the element that the event ran on
+  let keyPressed = e.target;
 
-    // Find the element that the event ran on
-    let keyPressed = e.target;
+  // Find the data-note attribute of that element
+  let note = keyPressed.dataset.note;
 
-    console.log(keyPressed);
-
-    // Find the data-note attribute of that element
-    let note = keyPressed.dataset.note;
-
-    console.log(note);
-
-    // Release the note
-    synth.triggerRelease(note);
-
+  // Release the note
+  synth.triggerRelease(note);
 }
 
 
@@ -115,18 +96,35 @@ testButton.addEventListener("mouseenter", playNote);
 key.addEventListener("mousedown", playNote);
 key.addEventListener("mouseup", endNote);
 key.addEventListener("mouseleave", endNote);
+key.addEventListener("mouseenter", playNote);
 
 
-//audio file playback
+// audio file playback
 const playbackbutton = document.getElementById("playback-button");
-const audioTrack = document .getElementById("audio-track");
+const audioTrack = document.getElementById("audio-track");
 
-function playAudio(){
-    if(audioTrack.paused === true){
+function playAudio() {
+  if (audioTrack.paused) {
     audioTrack.play();
-    }
+  } else {
     audioTrack.pause();
-
+  }
 }
 
-playbackbutton.addEventListener("click, playPauseAudio")
+playbackbutton.addEventListener("click", playAudio);
+
+// randomly scrub to location
+const randomButton = document.getElementById("random-location");
+
+// move playback to random position in faudion file
+function randomLocation(){
+    // file duration
+    let trackLength = audiotrack.duration;
+    audioTrack.currentlTime = trackLength * Math.random()
+}
+
+randomButton.addEventListener("click", randomLocation);
+
+
+// spatial control of synth based on image
+const flowerPainting = document.getElementById
