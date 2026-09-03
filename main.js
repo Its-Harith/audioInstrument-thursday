@@ -71,7 +71,11 @@ function playNote(e) {
   synth.triggerAttack(note);
 }
 
-function playImageNote(e){}
+function playImageNote(e) {
+  // Same idea as playNote, but for the image instead of a button
+  let note = flowerPainting.dataset.note;
+  synth.triggerAttack(note);
+}
 
 function endNote(e) {
   // Find the element that the event ran on
@@ -85,18 +89,14 @@ function endNote(e) {
 }
 
 
-// Test button
+// Test button (click to play, release to stop — no hover)
 testButton.addEventListener("mousedown", playNote);
 testButton.addEventListener("mouseup", endNote);
-testButton.addEventListener("mouseleave", endNote);
-testButton.addEventListener("mouseenter", playNote);
 
 
-// Key button
+// Key button (click to play, release to stop — no hover)
 key.addEventListener("mousedown", playNote);
 key.addEventListener("mouseup", endNote);
-key.addEventListener("mouseleave", endNote);
-key.addEventListener("mouseenter", playNote);
 
 
 // audio file playback
@@ -116,15 +116,19 @@ playbackbutton.addEventListener("click", playAudio);
 // randomly scrub to location
 const randomButton = document.getElementById("random-location");
 
-// move playback to random position in faudion file
-function randomLocation(){
-    // file duration
-    let trackLength = audiotrack.duration;
-    audioTrack.currentlTime = trackLength * Math.random()
+// move playback to random position in the audio file
+function randomLocation() {
+  // file duration
+  let trackLength = audioTrack.duration;
+  audioTrack.currentTime = trackLength * Math.random();
 }
 
 randomButton.addEventListener("click", randomLocation);
 
 
 // spatial control of synth based on image
-const flowerPainting = document.getElementById
+const flowerPainting = document.getElementById("flowerpainting");
+
+flowerPainting.addEventListener("mousedown", playImageNote);
+flowerPainting.addEventListener("mouseup", endNote);
+flowerPainting.addEventListener("mouseleave", endNote);
