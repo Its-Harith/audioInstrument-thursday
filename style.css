@@ -1,53 +1,52 @@
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap");
-
-/* Custom colours */
-
-:root {
-    --colour-01: #7dd87d;
-    --colour-02: #4c9173;
-    --colour-03: #5b446a;
-    --colour-04: #906387;
-    --border: 0.5rem inset var(--colour-03);
-}
-
-
-/* Body */
-
 body {
-    font-family: "IBM Plex Mono", monospace;
+  height: 100vh;
+  margin: 0;
+  background: #f4f1ea;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  font-family: sans-serif;
 }
 
-
-/* Intro modal */
-
-dialog[open] {
-    width: 60%;
-    max-width: 600px;
-    padding: 2rem;
-
-    border: var(--border);
-
-    background-color: var(--colour-02);
-    color: var(--colour-01);
-
-    font-family: "IBM Plex Mono", monospace;
+#status {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
 }
 
-
-/* Buttons */
-
-button {
-    border: var(--border);
+/* The garden holds every stem side by side, all anchored to the same
+   bottom line — this is what makes the symmetry read clearly,
+   like keys/tines lined up next to each other. */
+#garden {
+  display: flex;
+  align-items: flex-end; /* everything grows UP from the same baseline */
+  gap: 10px;
 }
 
-
-/* Piano keys */
-
-.whiteKey {
-    cursor: pointer;
+.stem-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.whiteKey:hover {
-    background-color: red;
+.stem {
+  width: 8px;
+  height: 0px; /* JS animates this to its target height */
+  background: #6ba368;
+  transition: height 1s ease;
 }
 
+.flower {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #e08ab3;
+  transform: scale(0);
+  transition: transform 0.6s ease;
+  margin-bottom: -8px;
+  cursor: pointer;
+}
+
+.flower:active {
+  transform: scale(1.15) !important; /* click feedback */
+}

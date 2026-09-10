@@ -1,134 +1,89 @@
-// Browser loads HTML
-// Browser loads JS
-// JS opens modal
-// User presses OK on modal
-// Modal closes
-// Audio initializes
-
-
-// Find my test button
-const testButton = document.getElementById("test-button");
-
-// Find my key-test button
-const key = document.getElementById("key-test");
-
-// Find our intro modal
-const introModal = document.getElementById("intro-modal");
-
-// Find modal close button
-const introModalCloseButton = document.getElementById("intro-modal-close");
-
-
-// Is the mouse button held?
-let mouseButtonDown = false;
-
-
-// Mouse
-
-window.addEventListener("mousedown", function() {
-  mouseButtonDown = true;
-});
-
-window.addEventListener("mouseup", function() {
-  mouseButtonDown = false;
-});
-
-
-// ////// Modal
-
-// Show modal on page
-introModal.showModal();
-
-// When OK is clicked, close modal
-introModalCloseButton.addEventListener("click", function closeIntroModal() {
-  // Close our modal
-  introModal.close();
-});
-
-// When modal closes, initialize Tone
-introModal.addEventListener("close", toneInit);
-
-
-// ////// Tone
-
-// Create instrument
-const synth = new Tone.PolySynth();
-
-function toneInit() {
-  // Connect synth to audio output
-  synth.toDestination();
-}
-
+// ---------- SOUND SETUP ----------
+const synth = new Tone.PolySynth().toDestination();
 
 function playNote(e) {
-  // Find the element that the event ran on
-  let keyPressed = e.target;
-
-  // Find the data-note attribute of that element
-  let note = keyPressed.dataset.note;
-
-  // Play the note
-  synth.triggerAttack(note);
+  synth.triggerAttack(e.currentTarget.dataset.note);
 }
-
-function playImageNote(e) {
-  // Same idea as playNote, but for the image instead of a button
-  let note = flowerPainting.dataset.note;
-  synth.triggerAttack(note);
-}
-
 function endNote(e) {
-  // Find the element that the event ran on
-  let keyPressed = e.target;
-
-  // Find the data-note attribute of that element
-  let note = keyPressed.dataset.note;
-
-  // Release the note
-  synth.triggerRelease(note);
+  synth.triggerRelease(e.currentTarget.dataset.note);
 }
 
+// ---------- LAYOUT ----------
+// 7 positions total, left to right. Notes are FIXED per position —
+// unlike prototype 2, the same spot always plays the same note,
+// which is what makes it feel like a real instrument instead of
+// a random sound generator.
+const notesLeftToRight = ["C4", "D4", "E4", "G4", "A4", "C5", "D5"];
+const centerIndex = 3; // "G4" — the middle stem
 
-// Test button (click to play, release to stop — no hover)
-testButton.addEventListener("mousedown", playNote);
-testButton.addEventListener("mouseup", endNote);
+const garden = document.getElementById('garden');
+const status = document.getElementById('status');
 
+// Build all 7 stems up front (invisible / height 0), so they already
+// exist in the right left-to-right order before any growing starts.
+const stems = [];
 
-// Key button (click to play, release to stop — no hover)
-key.addEventListener("mousedown", playNote);
-key.addEventListener("mouseup", endNote);
+for (let i = 0; i < notesLeftToRight.length; i++) {
+  const wrap = document.createElement('div');
+  wrap.className = 'stem-wrap';
 
+  const flower = document.createElement('div');
+  flower.className = 'flower';
+  flower.dataset.note = notesLeftToRight[i];
+  flower.addEventListener('mousedown', playNote);
+  flower.addEventListener('mouseup', endNote);
+  flower.addEventListener('mouseleave', endNote);
 
-// audio file playback
-const playbackbutton = document.getElementById("playback-button");
-const audioTrack = document.getElementById("audio-track");
+  const stem = document.createElement('div');
+  stem.className = 'stem';
 
-function playAudio() {
-  if (audioTrack.paused) {
-    audioTrack.play();
-  } else {
-    audioTrack.pause();
+  wrap.appendChild(flower);
+  wrap.appendChild(stem);
+  garden.appendChild(wrap);
+
+  stems.push({ stem, flower, index: i });
+}
+
+// ---------- GROWTH ORDER ----------
+// Center first, then outward in pairs: [3], [2,4], [1,5], [0,6]
+// This is what makes it visually grow "from the middle outward,
+// taller and taller" like you described.
+const growthOrder = [
+  [centerIndex],
+  [centerIndex - 1, centerIndex + 1],
+  [centerIndex - 2, centerIndex + 2],
+  [centerIndex - 3, centerIndex + 3],
+];
+
+function heightForDistance(distanceFromCenter) {
+  // Height increases the further a stem is from the center —
+  // this is the "taller and taller outward" shape.
+  return 60 + distanceFromCenter * 35;
+}
+
+function growStage(stageNum) {
+  if (stageNum >= growthOrder.length) {
+    status.textContent = 'Fully grown — click the flowers to play';
+    return;
   }
+
+  const indices = growthOrder[stageNum];
+  indices.forEach(function (i) {
+    const distance = Math.abs(i - centerIndex);
+    stems[i].stem.style.height = heightForDistance(distance) + 'px';
+    setTimeout(function () {
+      stems[i].flower.style.transform = 'scale(1)';
+    }, 600); // flower blooms shortly after its stem finishes growing
+  });
+
+  setTimeout(function () {
+    growStage(stageNum + 1);
+  }, 1400);
 }
 
-playbackbutton.addEventListener("click", playAudio);
-
-// randomly scrub to location
-const randomButton = document.getElementById("random-location");
-
-// move playback to random position in the audio file
-function randomLocation() {
-  // file duration
-  let trackLength = audioTrack.duration;
-  audioTrack.currentTime = trackLength * Math.random();
-}
-
-randomButton.addEventListener("click", randomLocation);
-
-
-// spatial control of synth based on image
-const flowerPainting = document.getElementById("flowerpainting");
-
-flowerPainting.addEventListener("mousedown", playImageNote);
-flowerPainting.addEventListener("mouseup", endNote);
-flowerPainting.addEventListener("mouseleave", endNote);
+// Growing starts on first click (Tone.js needs a user gesture to allow sound)
+document.body.addEventListener('click', function startOnce() {
+  status.textContent = 'Growing...';
+  growStage(0);
+  document.body.removeEventListener('click', startOnce);
+}, { once: true });
