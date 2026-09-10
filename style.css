@@ -1,53 +1,37 @@
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap");
+  body {
+    height: 100vh;
+    margin: 0;
+    background: #2e2a3d; /* dark background makes the break phase feel more "magical" */
+    overflow: hidden;
+    font-family: sans-serif;
+    color: white;
+  }
 
-/* Custom colours */
+  #status {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    font-size: 1.2rem;
+  }
 
-:root {
-    --colour-01: #7dd87d;
-    --colour-02: #4c9173;
-    --colour-03: #5b446a;
-    --colour-04: #906387;
-    --border: 0.5rem inset var(--colour-03);
-}
+  .field-flower {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    transform: scale(0);
+    transition: transform 0.8s ease;
+  }
 
+  .field-flower.grown {
+    transform: scale(1);
+  }
 
-/* Body */
-
-body {
-    font-family: "IBM Plex Mono", monospace;
-}
-
-
-/* Intro modal */
-
-dialog[open] {
-    width: 60%;
-    max-width: 600px;
-    padding: 2rem;
-
-    border: var(--border);
-
-    background-color: var(--colour-02);
-    color: var(--colour-01);
-
-    font-family: "IBM Plex Mono", monospace;
-}
-
-
-/* Buttons */
-
-button {
-    border: var(--border);
-}
-
-
-/* Piano keys */
-
-.whiteKey {
+  /* Only glow/react to hover once we're in break mode */
+  body.break-mode .field-flower {
     cursor: pointer;
-}
+  }
 
-.whiteKey:hover {
-    background-color: red;
-}
-
+  body.break-mode .field-flower.playing {
+    box-shadow: 0 0 20px 6px currentColor;
+  }

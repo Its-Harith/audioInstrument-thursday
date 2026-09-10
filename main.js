@@ -1,134 +1,86 @@
-// Browser loads HTML
-// Browser loads JS
-// JS opens modal
-// User presses OK on modal
-// Modal closes
-// Audio initializes
+  // ---------- SOUND SETUP ----------
+  const synth = new Tone.PolySynth().toDestination();
 
+  // Pentatonic scale — any combination of these notes sounds pleasant together
+  const scale = ["C4", "D4", "E4", "G4", "A4"];
 
-// Find my test button
-const testButton = document.getElementById("test-button");
+  // ---------- STUDY PHASE: spawn flowers over time ----------
+  // Real Pomodoro = 25 min. Sped up here to 8 seconds so you can test it now.
+  // To match a real session later, change STUDY_DURATION_MS to 25 * 60 * 1000
+  const STUDY_DURATION_MS = 8000;
+  const FLOWER_COUNT = 10;
+  const colors = ["#e08ab3", "#f2c14e", "#7dd87d", "#8ab6e0", "#c98ae0"];
 
-// Find my key-test button
-const key = document.getElementById("key-test");
+  const status = document.getElementById('status');
+  let flowersSpawned = 0;
 
-// Find our intro modal
-const introModal = document.getElementById("intro-modal");
+  function spawnFlower() {
+    const flower = document.createElement('div');
+    flower.className = 'field-flower';
 
-// Find modal close button
-const introModalCloseButton = document.getElementById("intro-modal-close");
+    // random position on screen, staying away from the very edges
+    const x = Math.random() * (window.innerWidth - 40) + 20;
+    const y = Math.random() * (window.innerHeight - 40) + 20;
+    flower.style.left = x + 'px';
+    flower.style.top = y + 'px';
 
+    // random colour, random note from the pleasant scale
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    flower.style.background = color;
+    flower.style.color = color; // used by the glow effect (currentColor)
+    flower.dataset.note = scale[Math.floor(Math.random() * scale.length)];
 
-// Is the mouse button held?
-let mouseButtonDown = false;
+    document.body.appendChild(flower);
 
+    // trigger the grow animation on the next frame
+    requestAnimationFrame(function () {
+      flower.classList.add('grown');
+    });
 
-// Mouse
-
-window.addEventListener("mousedown", function() {
-  mouseButtonDown = true;
-});
-
-window.addEventListener("mouseup", function() {
-  mouseButtonDown = false;
-});
-
-
-// ////// Modal
-
-// Show modal on page
-introModal.showModal();
-
-// When OK is clicked, close modal
-introModalCloseButton.addEventListener("click", function closeIntroModal() {
-  // Close our modal
-  introModal.close();
-});
-
-// When modal closes, initialize Tone
-introModal.addEventListener("close", toneInit);
-
-
-// ////// Tone
-
-// Create instrument
-const synth = new Tone.PolySynth();
-
-function toneInit() {
-  // Connect synth to audio output
-  synth.toDestination();
-}
-
-
-function playNote(e) {
-  // Find the element that the event ran on
-  let keyPressed = e.target;
-
-  // Find the data-note attribute of that element
-  let note = keyPressed.dataset.note;
-
-  // Play the note
-  synth.triggerAttack(note);
-}
-
-function playImageNote(e) {
-  // Same idea as playNote, but for the image instead of a button
-  let note = flowerPainting.dataset.note;
-  synth.triggerAttack(note);
-}
-
-function endNote(e) {
-  // Find the element that the event ran on
-  let keyPressed = e.target;
-
-  // Find the data-note attribute of that element
-  let note = keyPressed.dataset.note;
-
-  // Release the note
-  synth.triggerRelease(note);
-}
-
-
-// Test button (click to play, release to stop — no hover)
-testButton.addEventListener("mousedown", playNote);
-testButton.addEventListener("mouseup", endNote);
-
-
-// Key button (click to play, release to stop — no hover)
-key.addEventListener("mousedown", playNote);
-key.addEventListener("mouseup", endNote);
-
-
-// audio file playback
-const playbackbutton = document.getElementById("playback-button");
-const audioTrack = document.getElementById("audio-track");
-
-function playAudio() {
-  if (audioTrack.paused) {
-    audioTrack.play();
-  } else {
-    audioTrack.pause();
+    flowersSpawned++;
   }
-}
 
-playbackbutton.addEventListener("click", playAudio);
+  function studyPhase() {
+    const interval = STUDY_DURATION_MS / FLOWER_COUNT;
+    let spawned = 0;
 
-// randomly scrub to location
-const randomButton = document.getElementById("random-location");
+    const spawnTimer = setInterval(function () {
+      spawnFlower();
+      spawned++;
+      if (spawned >= FLOWER_COUNT) {
+        clearInterval(spawnTimer);
+        startBreak();
+      }
+    }, interval);
+  }
 
-// move playback to random position in the audio file
-function randomLocation() {
-  // file duration
-  let trackLength = audioTrack.duration;
-  audioTrack.currentTime = trackLength * Math.random();
-}
+  // ---------- BREAK PHASE: hover to play ----------
+  function startBreak() {
+    document.body.classList.add('break-mode');
+    status.textContent = 'Break — move your mouse over the flowers';
 
-randomButton.addEventListener("click", randomLocation);
+    const flowers = document.querySelectorAll('.field-flower');
 
+    flowers.forEach(function (flower) {
+      flower.addEventListener('mouseenter', function () {
+        const note = flower.dataset.note;
+        synth.triggerAttack(note);
+        flower.classList.add('playing');
+      });
 
-// spatial control of synth based on image
-const flowerPainting = document.getElementById("flowerpainting");
+      flower.addEventListener('mouseleave', function () {
+        const note = flower.dataset.note;
+        synth.triggerRelease(note);
+        flower.classList.remove('playing');
+      });
+    });
+  }
 
-flowerPainting.addEventListener("mousedown", playImageNote);
-flowerPainting.addEventListener("mouseup", endNote);
-flowerPainting.addEventListener("mouseleave", endNote);
+  // Tone needs a user click to start (browser rule) — so we kick off
+  // the whole thing on the first click anywhere on the page.
+  document.body.addEventListener('click', function startOnce() {
+    status.textContent = 'Study phase: flowers growing...';
+    studyPhase();
+    document.body.removeEventListener('click', startOnce);
+  }, { once: true });
+
