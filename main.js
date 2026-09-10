@@ -1,3 +1,4 @@
+
   // ---------- SOUND SETUP ----------
   const synth = new Tone.PolySynth().toDestination();
 
@@ -83,4 +84,3 @@
     studyPhase();
     document.body.removeEventListener('click', startOnce);
   }, { once: true });
-

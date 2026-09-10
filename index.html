@@ -4,10 +4,53 @@
 <meta charset="UTF-8">
 <title>Bloom — Prototype 2: Field of Flowers</title>
 <script src="https://unpkg.com/tone"></script>
+<script src="main.js" defer></script>
+
+<style>
+  body {
+    height: 100vh;
+    margin: 0;
+    background: #2e2a3d; /* dark background makes the break phase feel more "magical" */
+    overflow: hidden;
+    font-family: sans-serif;
+    color: white;
+  }
+
+  #status {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    font-size: 1.2rem;
+  }
+
+  .field-flower {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    transform: scale(0);
+    transition: transform 0.8s ease;
+  }
+
+  .field-flower.grown {
+    transform: scale(1);
+  }
+
+  /* Only glow/react to hover once we're in break mode */
+  body.break-mode .field-flower {
+    cursor: pointer;
+  }
+
+  body.break-mode .field-flower.playing {
+    box-shadow: 0 0 20px 6px currentColor;
+  }
+</style>
 </head>
 <body>
 
 <div id="status">Study phase: flowers growing...</div>
+
+
 
 </body>
 </html>
