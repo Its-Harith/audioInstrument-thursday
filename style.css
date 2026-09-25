@@ -1,53 +1,47 @@
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap");
-
-/* Custom colours */
-
-:root {
-    --colour-01: #7dd87d;
-    --colour-02: #4c9173;
-    --colour-03: #5b446a;
-    --colour-04: #906387;
-    --border: 0.5rem inset var(--colour-03);
-}
-
-
-/* Body */
-
 body {
-    font-family: "IBM Plex Mono", monospace;
+  height: 100vh;
+  margin: 0;
+  background: #2e2a3d; /* same dark backdrop as prototype 2, for a consistent "break" mood */
+  overflow: hidden;
+  font-family: sans-serif;
+  color: white;
 }
 
-
-/* Intro modal */
-
-dialog[open] {
-    width: 60%;
-    max-width: 600px;
-    padding: 2rem;
-
-    border: var(--border);
-
-    background-color: var(--colour-02);
-    color: var(--colour-01);
-
-    font-family: "IBM Plex Mono", monospace;
+#status {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  font-size: 1.2rem;
+  z-index: 10;
 }
 
-
-/* Buttons */
-
-button {
-    border: var(--border);
+.field-flower {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  transform: scale(0);
+  transition: transform 0.8s ease;
 }
 
-
-/* Piano keys */
-
-.whiteKey {
-    cursor: pointer;
+.field-flower.grown {
+  transform: scale(1);
 }
 
-.whiteKey:hover {
-    background-color: red;
+/* Only react to hover once we're in break mode, same rule as prototype 2 */
+body.break-mode .field-flower {
+  cursor: pointer;
 }
 
+body.break-mode .field-flower.playing {
+  box-shadow: 0 0 22px 7px currentColor;
+}
+
+/* Faint ring around each cluster's center, so the grouping this
+   prototype is testing is visible even before you start playing. */
+.cluster-marker {
+  position: absolute;
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  pointer-events: none;
+}
