@@ -1,0 +1,55 @@
+body {
+  height: 100vh;
+  margin: 0;
+  background: #2e2a3d;
+  overflow: hidden;
+  font-family: sans-serif;
+  color: white;
+}
+
+#status {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  font-size: 1.2rem;
+  z-index: 10;
+}
+
+
+#progress-track {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  z-index: 10;
+}
+
+#progress-fill {
+  height: 100%;
+  width: 0%;
+  background: #e08ab3;
+  transition: width 0.1s linear;
+}
+
+.field-flower {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  transform: scale(0);
+  transition: transform 0.6s ease;
+}
+
+.field-flower.grown {
+  transform: scale(1);
+}
+
+body.break-mode .field-flower {
+  cursor: pointer;
+}
+
+body.break-mode .field-flower.playing {
+  box-shadow: 0 0 20px 6px currentColor;
+}
