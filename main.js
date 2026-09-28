@@ -1,86 +1,136 @@
+// ---------- SETTINGS ----------
+// Sped up for testing. For a real session use 25 * 60 * 1000.
+const DURATION_MS = 16000;
 
-  // ---------- SOUND SETUP ----------
-  const synth = new Tone.PolySynth().toDestination();
+// One note per flower, all from the same pentatonic scale across
+// octaves, so any number of them sounding together stays harmonious.
+// Low notes come first, so the harmony grows from a deep base upward.
+const flowerNotes = ["C3", "G3", "C4", "D4", "E4", "G4", "A4", "C5"];
+const frequencies = {
+  C3: 130.81, G3: 196.0, C4: 261.63, D4: 293.66,
+  E4: 329.63, G4: 392.0, A4: 440.0, C5: 523.25
+};
+const colors = ["#e08ab3", "#f2c14e", "#7dd87d", "#8ab6e0", "#c98ae0"];
 
-  // Pentatonic scale — any combination of these notes sounds pleasant together
-  const scale = ["C4", "D4", "E4", "G4", "A4"];
+const status = document.getElementById("status");
+const startButton = document.getElementById("start");
+const flowers = [];
 
-  // ---------- STUDY PHASE: spawn flowers over time ----------
-  // Real Pomodoro = 25 min. Sped up here to 8 seconds so you can test it now.
-  // To match a real session later, change STUDY_DURATION_MS to 25 * 60 * 1000
-  const STUDY_DURATION_MS = 8000;
-  const FLOWER_COUNT = 10;
-  const colors = ["#e08ab3", "#f2c14e", "#7dd87d", "#8ab6e0", "#c98ae0"];
+// If anything goes wrong, show it on screen instead of failing silently
+window.onerror = function (message) {
+  status.textContent = "Error: " + message;
+  status.style.color = "#ff8080";
+};
 
-  const status = document.getElementById('status');
-  let flowersSpawned = 0;
+// ---------- SOUND (built-in Web Audio, no library needed) ----------
+let audioCtx = null;
+let master = null;
+const droneVoices = {}; // note -> { osc, gain }, sustained during growth
+const playVoices = {};  // note -> { osc, gain }, held while pressing in the break
 
-  function spawnFlower() {
-    const flower = document.createElement('div');
-    flower.className = 'field-flower';
+// Start a note that fades in slowly and keeps sounding until stopped
+function startVoice(store, note, type, peak, attack) {
+  if (store[note]) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.value = frequencies[note];
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(peak, now + attack);
+  osc.connect(gain);
+  gain.connect(master);
+  osc.start();
+  store[note] = { osc: osc, gain: gain };
+}
 
-    // random position on screen, staying away from the very edges
-    const x = Math.random() * (window.innerWidth - 40) + 20;
-    const y = Math.random() * (window.innerHeight - 40) + 20;
-    flower.style.left = x + 'px';
-    flower.style.top = y + 'px';
+// Fade a note out over `release` seconds, then remove it
+function stopVoice(store, note, release) {
+  const voice = store[note];
+  if (!voice) return;
+  const now = audioCtx.currentTime;
+  voice.gain.gain.cancelScheduledValues(now);
+  voice.gain.gain.setValueAtTime(voice.gain.gain.value, now);
+  voice.gain.gain.linearRampToValueAtTime(0, now + release);
+  voice.osc.stop(now + release + 0.05);
+  delete store[note];
+}
 
-    // random colour, random note from the pleasant scale
-    const color = colors[Math.floor(Math.random() * colors.length)];
-    flower.style.background = color;
-    flower.style.color = color; // used by the glow effect (currentColor)
-    flower.dataset.note = scale[Math.floor(Math.random() * scale.length)];
+// ---------- START (click also unlocks browser audio) ----------
+startButton.addEventListener("click", function () {
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  audioCtx.resume();
+  master = audioCtx.createGain();
+  master.gain.value = 0.8;
+  master.connect(audioCtx.destination);
 
-    document.body.appendChild(flower);
+  startButton.style.display = "none";
+  status.textContent = "Study phase: listen to the garden build a harmony...";
+  studyPhase();
+}, { once: true });
 
-    // trigger the grow animation on the next frame
-    requestAnimationFrame(function () {
-      flower.classList.add('grown');
+// ---------- STUDY PHASE ----------
+// Flowers appear at an even interval. Each one adds its own note
+// to a sustained chord, so the sound gets richer as time passes.
+function studyPhase() {
+  const interval = DURATION_MS / flowerNotes.length;
+  let i = 0;
+
+  function addFlower() {
+    spawnFlower(flowerNotes[i]);
+    i++;
+    if (i < flowerNotes.length) {
+      setTimeout(addFlower, interval);
+    } else {
+      setTimeout(startBreak, interval); // one last interval, then break
+    }
+  }
+  addFlower();
+}
+
+function spawnFlower(note) {
+  const flower = document.createElement("div");
+  flower.className = "flower droning";
+  flower.dataset.note = note;
+
+  flower.style.left = Math.random() * (window.innerWidth - 100) + 30 + "px";
+  flower.style.top = Math.random() * (window.innerHeight - 100) + 30 + "px";
+
+  const color = colors[Math.floor(Math.random() * colors.length)];
+  flower.style.background = color;
+  flower.style.color = color; // used by the glow (currentColor)
+
+  document.body.appendChild(flower);
+  flowers.push(flower);
+  requestAnimationFrame(function () { flower.classList.add("grown"); });
+
+  // This flower's sustained note: sine wave, slow 3 second fade-in
+  startVoice(droneVoices, note, "sine", 0.08, 3);
+}
+
+// ---------- BREAK PHASE ----------
+// The drone fades out, and the same notes you just heard building up
+// become playable. Press and hold a flower to play it.
+function startBreak() {
+  flowerNotes.forEach(function (note) { stopVoice(droneVoices, note, 4); });
+  flowers.forEach(function (f) { f.classList.remove("droning"); });
+
+  document.body.classList.add("playable");
+  status.textContent = "Break: press and hold the flowers to play";
+
+  flowers.forEach(function (flower) {
+    const note = flower.dataset.note;
+
+    flower.addEventListener("mousedown", function () {
+      flower.classList.add("playing");
+      startVoice(playVoices, note, "triangle", 0.25, 0.02);
     });
 
-    flowersSpawned++;
-  }
-
-  function studyPhase() {
-    const interval = STUDY_DURATION_MS / FLOWER_COUNT;
-    let spawned = 0;
-
-    const spawnTimer = setInterval(function () {
-      spawnFlower();
-      spawned++;
-      if (spawned >= FLOWER_COUNT) {
-        clearInterval(spawnTimer);
-        startBreak();
-      }
-    }, interval);
-  }
-
-  // ---------- BREAK PHASE: hover to play ----------
-  function startBreak() {
-    document.body.classList.add('break-mode');
-    status.textContent = 'Break — move your mouse over the flowers';
-
-    const flowers = document.querySelectorAll('.field-flower');
-
-    flowers.forEach(function (flower) {
-      flower.addEventListener('mouseenter', function () {
-        const note = flower.dataset.note;
-        synth.triggerAttack(note);
-        flower.classList.add('playing');
-      });
-
-      flower.addEventListener('mouseleave', function () {
-        const note = flower.dataset.note;
-        synth.triggerRelease(note);
-        flower.classList.remove('playing');
-      });
-    });
-  }
-
-  // Tone needs a user click to start (browser rule) — so we kick off
-  // the whole thing on the first click anywhere on the page.
-  document.body.addEventListener('click', function startOnce() {
-    status.textContent = 'Study phase: flowers growing...';
-    studyPhase();
-    document.body.removeEventListener('click', startOnce);
-  }, { once: true });
+    function stop() {
+      flower.classList.remove("playing");
+      stopVoice(playVoices, note, 0.5);
+    }
+    flower.addEventListener("mouseup", stop);
+    flower.addEventListener("mouseleave", stop);
+  });
+}
