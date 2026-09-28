@@ -80,7 +80,7 @@ function studyPhase() {
 // ---------- BREAK PHASE: hover to play, same as prototype 2 ----------
 function startBreak() {
   document.body.classList.add("break-mode");
-  status.textContent = "Break — move your mouse over the flowers";
+  status.textContent = "Break, move your mouse over the flowers";
 
   const flowers = document.querySelectorAll(".field-flower");
 
@@ -100,7 +100,7 @@ function startBreak() {
 document.body.addEventListener(
   "click",
   function startOnce() {
-    status.textContent = "Study phase: flowers growing...";
+    status.textContent = "Study phase: press anywhere for the flowers to start growing...";
     studyPhase();
     document.body.removeEventListener("click", startOnce);
   },
