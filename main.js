@@ -100,7 +100,7 @@ function startBreak() {
 document.body.addEventListener(
   "click",
   function startOnce() {
-    status.textContent = "Study phase: press anywhere for the flowers to start growing...";
+    status.textContent = "Study phase: Flowers growing...";
     studyPhase();
     document.body.removeEventListener("click", startOnce);
   },
