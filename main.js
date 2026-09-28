@@ -58,7 +58,7 @@
   // ---------- BREAK PHASE: hover to play ----------
   function startBreak() {
     document.body.classList.add('break-mode');
-    status.textContent = 'Break — move your mouse over the flowers';
+    status.textContent = 'Break, move your mouse over the flowers';
 
     const flowers = document.querySelectorAll('.field-flower');
 
