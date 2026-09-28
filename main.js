@@ -63,7 +63,7 @@ function heightForDistance(distanceFromCenter) {
 
 function growStage(stageNum) {
   if (stageNum >= growthOrder.length) {
-    status.textContent = 'Fully grown — click the flowers to play';
+    status.textContent = 'Fully grown, click the flowers to play';
     return;
   }
 
