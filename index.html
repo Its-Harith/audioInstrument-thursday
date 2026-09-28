@@ -2,18 +2,256 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Bloom, Prototype 5: Accelerating Garden</title>
+<title>Bloom — Information Design: Steady Bloom</title>
 
-<link rel="stylesheet" href="style.css">
-<script src="https://unpkg.com/tone"></script>
+<style>
+body {
+  height: 100vh;
+  margin: 0;
+  background: #2e2a3d;
+  overflow: hidden;
+  font-family: sans-serif;
+  color: white;
+}
+
+#status {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  font-size: 1.2rem;
+  z-index: 20;
+}
+
+/* Start button doubles as the click browsers need before allowing audio */
+#start {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 1rem 2.5rem;
+  font-size: 1.2rem;
+  border: none;
+  border-radius: 999px;
+  background: #e08ab3;
+  color: white;
+  cursor: pointer;
+  z-index: 20;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+#start:hover { transform: translate(-50%, -50%) scale(1.1); background: #f0a0c8; }
+#start:active { transform: translate(-50%, -50%) scale(0.95); }
+
+/* While the bar fills, the whole garden sits behind a blur: the
+   flowers are visible as soft blooming shapes, but not yet "in focus"
+   as an instrument. */
+#garden-wrap {
+  position: fixed;
+  inset: 0;
+  filter: blur(14px);
+  transition: filter 0.8s ease;
+}
+#garden-wrap.revealed { filter: blur(0px); }
+
+.flower {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  transform: scale(0);
+  transition: transform 0.8s ease;
+}
+.flower.grown { transform: scale(1); }
+
+/* Quick pop when the blur lifts, as if the flowers are being released */
+.flower.released { animation: pop 0.6s ease; }
+@keyframes pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.6); }
+  100% { transform: scale(1); }
+}
+
+body.playable .flower { cursor: pointer; }
+body.playable .flower.playing { box-shadow: 0 0 22px 7px currentColor; }
+
+/* Linear progress bar: fills at exactly the same constant rate the
+   flowers appear, so bar % = time elapsed. */
+#bar-track {
+  position: fixed;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 320px;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  z-index: 20;
+}
+
+#bar-fill {
+  height: 100%;
+  width: 0%;
+  background: #e08ab3;
+  border-radius: 999px;
+}
+
+/* Plays once when the bar hits 100%: a glow burst, then it fades away */
+#bar-fill.exploding { animation: burst 0.7s ease forwards; }
+@keyframes burst {
+  0%   { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(224, 138, 179, 0.8); }
+  60%  { transform: scale(1.2, 2); box-shadow: 0 0 60px 40px rgba(224, 138, 179, 0); }
+  100% { transform: scale(1.2, 2); opacity: 0; }
+}
+</style>
 </head>
 <body>
 
-<div id="status">Study phase: flowers growing...</div>
-<div id="progress-track">
-  <div id="progress-fill"></div>
-</div>
+<div id="status">Press start to begin your session</div>
+<button id="start">Start session</button>
 
-<script src="main.js" defer></script>
+<div id="garden-wrap"></div>
+
+<div id="bar-track"><div id="bar-fill"></div></div>
+
+<script>
+// ---------- SETTINGS ----------
+// Sped up for testing. For a real session use 25 * 60 * 1000.
+const DURATION_MS = 10000;
+const FLOWER_COUNT = 10;
+const colors = ["#e08ab3", "#f2c14e", "#7dd87d", "#8ab6e0", "#c98ae0"];
+const notes = ["C4", "D4", "E4", "G4", "A4"]; // pentatonic: always sounds good together
+const frequencies = { C4: 261.63, D4: 293.66, E4: 329.63, G4: 392.0, A4: 440.0 };
+
+const status = document.getElementById("status");
+const startButton = document.getElementById("start");
+const gardenWrap = document.getElementById("garden-wrap");
+const barFill = document.getElementById("bar-fill");
+const flowers = [];
+
+// If anything goes wrong, show it on screen instead of failing silently
+window.onerror = function (message) {
+  status.textContent = "Error: " + message;
+  status.style.color = "#ff8080";
+};
+
+// ---------- SOUND (built-in Web Audio, no library needed) ----------
+let audioCtx = null;
+const voices = {}; // note -> { osc, gain } for notes currently held down
+
+function startVoice(note) {
+  if (voices[note]) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = "triangle";
+  osc.frequency.value = frequencies[note];
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(0.25, now + 0.02);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  voices[note] = { osc: osc, gain: gain };
+}
+
+function stopVoice(note) {
+  const voice = voices[note];
+  if (!voice) return;
+  const now = audioCtx.currentTime;
+  voice.gain.gain.cancelScheduledValues(now);
+  voice.gain.gain.setValueAtTime(voice.gain.gain.value, now);
+  voice.gain.gain.linearRampToValueAtTime(0, now + 0.5);
+  voice.osc.stop(now + 0.55);
+  delete voices[note];
+}
+
+// ---------- START (click also unlocks browser audio) ----------
+startButton.addEventListener("click", function () {
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  audioCtx.resume();
+  startButton.style.display = "none";
+  status.textContent = "Study phase: the garden is growing...";
+  studyPhase();
+}, { once: true });
+
+// ---------- STUDY PHASE ----------
+// Flowers appear at an EVEN interval and the bar fills at a constant
+// rate, so garden fullness = % of time elapsed. This is the linear
+// baseline the other Information Design prototypes are compared against.
+function studyPhase() {
+  const interval = DURATION_MS / FLOWER_COUNT;
+  let spawned = 0;
+  const spawnTimer = setInterval(function () {
+    spawnFlower();
+    spawned++;
+    if (spawned >= FLOWER_COUNT) clearInterval(spawnTimer);
+  }, interval);
+
+  const startTime = performance.now();
+  function updateBar() {
+    const elapsed = performance.now() - startTime;
+    const percent = Math.min(100, (elapsed / DURATION_MS) * 100);
+    barFill.style.width = percent + "%";
+
+    if (elapsed < DURATION_MS) {
+      requestAnimationFrame(updateBar);
+    } else {
+      explodeBar();
+    }
+  }
+  requestAnimationFrame(updateBar);
+}
+
+function spawnFlower() {
+  const flower = document.createElement("div");
+  flower.className = "flower";
+  flower.dataset.note = notes[Math.floor(Math.random() * notes.length)];
+
+  flower.style.left = Math.random() * (window.innerWidth - 100) + 30 + "px";
+  flower.style.top = Math.random() * (window.innerHeight - 160) + 30 + "px"; // stay clear of the bar
+
+  const color = colors[Math.floor(Math.random() * colors.length)];
+  flower.style.background = color;
+  flower.style.color = color; // used by the glow (currentColor)
+
+  gardenWrap.appendChild(flower);
+  flowers.push(flower);
+  requestAnimationFrame(function () { flower.classList.add("grown"); });
+}
+
+// ---------- THE REVEAL ----------
+// The bar bursts and the blur lifts in the same moment, so it reads
+// as one release: the timer ends and the instrument is unleashed.
+function explodeBar() {
+  status.textContent = "";
+  barFill.classList.add("exploding");
+  gardenWrap.classList.add("revealed");
+
+  flowers.forEach(function (flower, i) {
+    setTimeout(function () { flower.classList.add("released"); }, i * 40);
+  });
+
+  setTimeout(startBreak, 900);
+}
+
+// ---------- BREAK PHASE: hover to play ----------
+function startBreak() {
+  document.getElementById("bar-track").style.display = "none";
+  document.body.classList.add("playable");
+  status.textContent = "Break: move your mouse over the flowers to play";
+
+  flowers.forEach(function (flower) {
+    const note = flower.dataset.note;
+
+    flower.addEventListener("mouseenter", function () {
+      flower.classList.add("playing");
+      startVoice(note);
+    });
+    flower.addEventListener("mouseleave", function () {
+      flower.classList.remove("playing");
+      stopVoice(note);
+    });
+  });
+}
+</script>
+
 </body>
 </html>
