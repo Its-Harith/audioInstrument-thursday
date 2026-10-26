@@ -12,6 +12,21 @@
   <!-- Decorative water background (animated in CSS) -->
   <div id="water" aria-hidden="true"></div>
 
+  <!-- Sky band along the top. The sun crosses it during the study phase
+       and sets behind the water line when the break begins. -->
+  <div id="sky" aria-hidden="true">
+    <div id="sun"></div>
+    <div id="haze"></div> <!-- soft mist at the horizon so sky and water blend -->
+  </div>
+
+  <!-- The water surface: horizon haze, the sun's reflection, and the
+       wave rings drawn by JS. Clipped at the horizon so rings never
+       spill into the sky. -->
+  <div id="pond" aria-hidden="true">
+    <div id="sheen"></div>
+    <canvas id="glitter"></canvas>
+  </div>
+
   <!-- aria-live so screen readers announce the phase changes -->
   <p id="status" aria-live="polite">Set your session, then press start</p>
 

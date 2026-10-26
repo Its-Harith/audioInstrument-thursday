@@ -2,14 +2,16 @@
    Sizes live in variables so each screen-size breakpoint
    only has to change a few values. */
 :root {
-  --water-top: #0f4c5c;
-  --water-mid: #0b3a53;
-  --water-deep: #082a40;
+  --water-top: #4fa8a6;
+  --water-mid: #2f8190;
+  --water-deep: #235d73;
   --accent: #f48fb1;
   --accent-hover: #f8a9c4;
   --text: #ffffff;
-  --panel: rgba(8, 42, 64, 0.75);
+  --panel: rgba(20, 78, 100, 0.72);
 
+  --horizon: clamp(110px, 18vh, 220px);  /* height of the sky band */
+  --sun-size: 44px;
   --flower-size: 36px;   /* lotus is built from this; whole lotus is 2x */
   --status-size: 1rem;
   --button-size: 1.1rem;
@@ -38,13 +40,15 @@ body {
 }
 
 /* ---------- WATER BACKGROUND ----------
-   A deep gradient with two slowly drifting layers: soft light
-   patches and faint ripple rings. Pure CSS, no images. */
+   Soft turquoise that deepens toward you, so the water shares the pastel
+   palette of the lotuses and sunset. Two slowly drifting layers: broad
+   patches of light (with a faint pink tint), and small dapples of light
+   that are flattened the same way as the ripples. Pure CSS, no images. */
 #water {
   position: fixed;
   inset: 0;
   overflow: hidden;
-  background: linear-gradient(180deg, var(--water-top) 0%, var(--water-mid) 55%, var(--water-deep) 100%);
+  background: linear-gradient(180deg, var(--water-top) 0%, var(--water-mid) 45%, var(--water-deep) 100%);
 }
 #water::before,
 #water::after {
@@ -54,16 +58,122 @@ body {
 }
 #water::before {
   background:
-    radial-gradient(ellipse at 20% 30%, rgba(120, 220, 230, 0.18), transparent 45%),
-    radial-gradient(ellipse at 78% 62%, rgba(120, 200, 240, 0.14), transparent 50%);
+    radial-gradient(ellipse at 20% 30%, rgba(190, 245, 240, 0.22), transparent 45%),
+    radial-gradient(ellipse at 78% 62%, rgba(255, 220, 235, 0.14), transparent 50%);
   animation: drift 26s ease-in-out infinite alternate;
 }
 #water::after {
-  background: repeating-radial-gradient(circle at 50% 120%, transparent 0 38px, rgba(255, 255, 255, 0.04) 40px 42px);
-  animation: sway 18s ease-in-out infinite alternate;
+  /* Soft horizontal streaks of light: fractal noise stretched sideways, so
+     they read as gentle ripples seen from a low angle (not a regular grid). */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='500'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.004 0.05' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 1.9 0 0 -0.98'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 1200px 500px;
+  opacity: 0.42;
+  -webkit-mask-image: linear-gradient(180deg, transparent 5%, #000 50%);
+  mask-image: linear-gradient(180deg, transparent 5%, #000 50%);
+  animation: dapple 90s linear infinite;
 }
-@keyframes drift { to { transform: translate(4%, -3%) scale(1.08); } }
-@keyframes sway  { to { transform: translateY(-3%); } }
+@keyframes drift  { to { transform: translate(4%, -3%) scale(1.08); } }
+@keyframes dapple { to { background-position: 1200px 0; } }
+
+/* ---------- SKY AND SUN (time progress) ----------
+   The sun is the timer: it rises on the left as the study phase starts,
+   climbs, then sinks into the water on the right as the break begins.
+   JS moves it and sets --dusk (0 to 1), which fades in a warm sunset
+   sky, and --sun-color / --sun-glow, which warm the sun as time passes.
+   The sky clips the sun at the water line, so it really sets into it. */
+#sky {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--horizon);
+  overflow: hidden;
+  background: linear-gradient(180deg, #2f6f9f 0%, #7fbfdc 70%, #cfeaf2 100%);
+}
+#sky::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #3b2350 0%, #a2476b 60%, #ff9a5c 100%);
+  opacity: var(--dusk, 0);
+}
+#sun {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1; /* above the dusk overlay */
+  width: var(--sun-size);
+  height: var(--sun-size);
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, #fffbe0, var(--sun-color, #ffd45c));
+  box-shadow: 0 0 calc(var(--sun-size) * 0.9) calc(var(--sun-size) * 0.3) var(--sun-glow, rgba(255, 212, 92, 0.45));
+  will-change: transform;
+  transform: translate(-200px, -200px); /* off-screen until JS places it */
+}
+
+/* Mist over the horizon. --haze matches the sky's lowest colour (set by JS),
+   so the sky melts into the water instead of ending in a hard line. */
+#haze {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 40%;
+  z-index: 2; /* above the sun, so it sinks into the mist */
+  background: linear-gradient(180deg, transparent, var(--haze, #cfeaf2));
+}
+
+/* ---------- WATER SURFACE ----------
+   Everything that sits ON the water (haze, sun reflection, wave rings)
+   lives in #pond, which starts at the horizon and clips its children. */
+#pond {
+  position: fixed;
+  top: var(--horizon);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Water near the horizon reflects the pale sky, then deepens toward you.
+   The ::after is a warm pool of light under the sun. */
+#pond::before {
+  /* As dusk arrives the water takes on a soft plum tint, like the sky */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(150, 90, 150, 0.15), rgba(110, 60, 130, 0.38));
+  opacity: var(--dusk, 0);
+}
+#sheen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 26vh;
+  background: linear-gradient(180deg, var(--haze, #cfeaf2), transparent);
+}
+#sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  height: 160%;
+  background: radial-gradient(ellipse 30% 55% at var(--sun-x, -999px) 0%, var(--sun-glow, transparent), transparent);
+  opacity: var(--glint, 0);
+}
+
+/* The sun's glittering path. Drawn on a canvas by JS (drawGlitter) as
+   many short, twinkling dashes of light that spread out toward the viewer. */
+#glitter {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 62%;
+  opacity: var(--glint, 0);
+  mix-blend-mode: screen;
+}
 
 /* ---------- SETUP PANEL ---------- */
 #setup {
@@ -137,9 +247,14 @@ body {
 }
 
 /* ---------- LOTUS ----------
-   Each lotus is a lily pad with a fan of petals. Petals start
-   nearly closed (a bud) and slowly open over the time left in the
-   study phase, so the pond's blooming IS the timer. The opening
+   Each lotus sits on a lily pad and is built from three rows of pointed
+   petals, seen from a low angle: a pale BACK row, a fuller MIDDLE row, and
+   a few wide FRONT petals that spread low and sideways. Golden stamens sit
+   in the gap in the middle. Petals are pale at the base, a deeper rose in
+   the creases, and fade to a light tip; those shades are mixed from the
+   lotus's own colour (currentColor). A soft reflection hangs below it.
+   Petals start nearly closed (a bud) and slowly open over the time left in
+   the study phase, so the pond's blooming IS the timer. The opening
    duration is set per lotus from JS via --bloom-time. */
 .flower {
   position: absolute;
@@ -152,6 +267,30 @@ body {
 }
 .flower.grown { transform: scale(1); }
 
+/* Still rings on the water around the lotus, like the calm ripples that
+   settle around a flower on a pond */
+.flower::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 73%;
+  width: calc(var(--flower-size) * 6.4);
+  height: calc(var(--flower-size) * 2.8);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: repeating-radial-gradient(ellipse closest-side, transparent 0 6.4%, rgba(255, 255, 255, 0.15) 6.9% 7.6%, transparent 8%);
+  -webkit-mask-image: radial-gradient(ellipse closest-side, #000 20%, transparent 100%);
+  mask-image: radial-gradient(ellipse closest-side, #000 20%, transparent 100%);
+  pointer-events: none;
+  animation: settle 6s ease-in-out infinite alternate;
+}
+@keyframes settle {
+  from { transform: translate(-50%, -50%) scale(0.96); }
+  to   { transform: translate(-50%, -50%) scale(1.04); }
+}
+
+/* Lily pad: muted green with faint veins fanning out from the middle, a few
+   dew drops, and a pale ring where it meets the water */
 .pad {
   position: absolute;
   left: 5%;
@@ -159,26 +298,86 @@ body {
   bottom: 6%;
   height: 42%;
   border-radius: 50%;
-  background: radial-gradient(ellipse at 40% 35%, #58b377, #2c6e4a);
-  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.3);
+  background:
+    radial-gradient(circle at 22% 62%, rgba(255, 255, 255, 0.95) 0 1.3px, rgba(255, 255, 255, 0.3) 1.5px 3px, transparent 3.5px),
+    radial-gradient(circle at 78% 46%, rgba(255, 255, 255, 0.95) 0 1.1px, rgba(255, 255, 255, 0.3) 1.3px 2.6px, transparent 3px),
+    radial-gradient(circle at 64% 76%, rgba(255, 255, 255, 0.95) 0 1px, rgba(255, 255, 255, 0.3) 1.2px 2.4px, transparent 2.8px),
+    repeating-conic-gradient(from 0deg at 50% 50%, rgba(255, 255, 255, 0.12) 0 1.2deg, transparent 1.2deg 24deg),
+    radial-gradient(ellipse at 40% 35%, #8cc4ad, #3f8575);
+  box-shadow: 0 5px 9px rgba(0, 40, 60, 0.25), inset 0 -3px 5px rgba(0, 70, 50, 0.25);
+}
+.pad::after {
+  content: "";
+  position: absolute;
+  inset: -4px -7px;
+  border: 1.5px solid rgba(255, 255, 255, 0.28);
+  border-radius: 50%;
 }
 
-.bloom { position: absolute; inset: 0; pointer-events: none; }
+.bloom { position: absolute; inset: 0; pointer-events: none; transition: filter 0.4s ease; }
 
+/* Reflection: a flipped, squashed, dimmed copy of the bloom (built by JS),
+   mirrored about the water line and fading away downward. */
+.reflection {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transform-origin: 50% 73%;
+  transform: scaleY(-0.85);
+  opacity: 0.5;
+  filter: blur(1.2px) brightness(0.6) saturate(0.9);
+  -webkit-mask-image: linear-gradient(to top, #000 27%, rgba(0, 0, 0, 0.65) 55%, transparent 96%);
+  mask-image: linear-gradient(to top, #000 27%, rgba(0, 0, 0, 0.65) 55%, transparent 96%);
+  animation: wobble 5s ease-in-out infinite alternate;
+}
+@keyframes wobble {
+  from { transform: scaleY(-0.85) skewX(-1.5deg); }
+  to   { transform: scaleY(-0.85) skewX(1.5deg); }
+}
+
+/* Petals. --angle, --len and --w (width) are set per petal by JS. */
 .petal {
   position: absolute;
-  left: calc(50% - var(--flower-size) * 0.21);
+  left: calc(50% - var(--flower-size) * var(--w, 0.4) / 2);
   bottom: 27%;
-  width: calc(var(--flower-size) * 0.42);
-  height: var(--flower-size);
+  width: calc(var(--flower-size) * var(--w, 0.4));
+  height: calc(var(--flower-size) * 1.05);
   transform-origin: 50% 100%;
   transform: rotate(calc(var(--angle) * 0.1)) scaleY(0.5);
   transition: transform var(--bloom-time, 10s) ease-in-out;
-  background: linear-gradient(to top, #ffffff 0%, currentColor 85%);
-  border-radius: 50% 50% 45% 45% / 85% 85% 15% 15%;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+  clip-path: polygon(50.0% 0.0%, 67.5% 3.8%, 76.1% 7.7%, 82.5% 11.5%, 87.5% 15.4%, 91.4% 19.2%, 94.5% 23.1%, 96.9% 26.9%, 98.5% 30.8%, 99.5% 34.6%, 100.0% 38.5%, 99.9% 42.3%, 99.3% 46.2%, 98.2% 50.0%, 96.8% 53.8%, 94.9% 57.7%, 92.6% 61.5%, 92.3% 65.4%, 91.7% 69.2%, 90.7% 73.1%, 89.1% 76.9%, 87.0% 80.8%, 84.2% 84.6%, 80.5% 88.5%, 75.6% 92.3%, 68.6% 96.2%, 50.0% 100.0%, 31.4% 96.2%, 24.4% 92.3%, 19.5% 88.5%, 15.8% 84.6%, 13.0% 80.8%, 10.9% 76.9%, 9.3% 73.1%, 8.3% 69.2%, 7.7% 65.4%, 7.4% 61.5%, 5.1% 57.7%, 3.2% 53.8%, 1.8% 50.0%, 0.7% 46.2%, 0.1% 42.3%, 0.0% 38.5%, 0.5% 34.6%, 1.5% 30.8%, 3.1% 26.9%, 5.5% 23.1%, 8.6% 19.2%, 12.5% 15.4%, 17.5% 11.5%, 23.9% 7.7%, 32.5% 3.8%);
+  /* The first background is a plain fallback; the second mixes deeper and
+     paler shades from the lotus colour in browsers that support color-mix. */
+  background: linear-gradient(to top, #ffe9f3 0%, currentColor 55%, #ffffff 100%);
+  background: linear-gradient(to top, #ffe9f3 0%, color-mix(in srgb, currentColor 72%, #8a1c5a) 22%, currentColor 62%, color-mix(in srgb, currentColor 30%, #ffffff) 100%);
 }
-.flower.open .petal { transform: rotate(var(--angle)) scaleY(1); }
+.petal.back {
+  background: linear-gradient(to top, currentColor 0%, #ffffff 100%);
+  background: linear-gradient(to top, color-mix(in srgb, currentColor 80%, #8a1c5a) 0%, color-mix(in srgb, currentColor 70%, #ffffff) 55%, color-mix(in srgb, currentColor 22%, #ffffff) 100%);
+}
+.petal.front {
+  background: linear-gradient(to top, currentColor 0%, #ffffff 100%);
+  background: linear-gradient(to top, color-mix(in srgb, currentColor 65%, #8a1c5a) 0%, currentColor 45%, color-mix(in srgb, currentColor 22%, #ffffff) 100%);
+}
+.flower.open .petal { transform: rotate(var(--angle)) scaleY(var(--len, 1)); }
+
+/* Golden stamens in the middle of the lotus, fading in as it opens: a small
+   dome dotted with tiny anthers */
+.centre {
+  position: absolute;
+  left: calc(50% - var(--flower-size) * 0.23);
+  bottom: calc(27% + var(--flower-size) * 0.46);
+  width: calc(var(--flower-size) * 0.46);
+  height: calc(var(--flower-size) * 0.26);
+  border-radius: 50% 50% 40% 40% / 70% 70% 30% 30%;
+  background:
+    radial-gradient(circle, rgba(196, 98, 14, 0.6) 0 0.7px, transparent 1.3px) 0 0 / 3.5px 3.5px,
+    radial-gradient(ellipse at 50% 80%, #ffe27a 0%, #f6b93b 50%, #e07f22 100%);
+  box-shadow: 0 1px 2px rgba(120, 40, 20, 0.35);
+  opacity: 0;
+  transition: opacity var(--bloom-time, 10s) ease-in;
+}
+.flower.open .centre { opacity: 1; }
 
 /* While a lotus's note is sustaining it glows gently, so you can
    see which flowers are contributing to the sound. */
@@ -191,18 +390,48 @@ body {
 body.playable .flower { cursor: pointer; }
 body.playable .flower.playing .bloom { filter: drop-shadow(0 0 18px currentColor) drop-shadow(0 0 6px #fff); }
 
-/* Ripple rings on the water when a lotus appears or is played */
-.ripple {
-  position: fixed;
-  width: 20px;
-  height: 20px;
-  border: 2px solid rgba(255, 255, 255, 0.55);
-  border-radius: 50%;
-  pointer-events: none;
-  transform: translate(-50%, -50%) scale(1);
-  animation: ripple 1.8s ease-out forwards;
+/* A lotus glows and bobs briefly when a wave reaches it and it chimes.
+   --touch (0 to 1, set by JS) is how strongly the wave arrived, so a
+   distant lotus only stirs a little. */
+.flower.touched .bloom {
+  filter: drop-shadow(0 0 calc(4px + 14px * var(--touch, 1)) currentColor) drop-shadow(0 0 4px #fff);
 }
-@keyframes ripple { to { transform: translate(-50%, -50%) scale(9); opacity: 0; } }
+.flower.touched .pad,
+.flower.touched .bloom { animation: bob 0.9s ease-out; }
+@keyframes bob {
+  0%   { transform: translateY(0); }
+  25%  { transform: translateY(calc(3px * var(--touch, 1))); }
+  60%  { transform: translateY(calc(-1.5px * var(--touch, 1))); }
+  100% { transform: translateY(0); }
+}
+
+/* ---------- RIPPLES ----------
+   One ripple style for everything on the water (a lotus appearing, a tap,
+   a chime, the sunset): a thin white crest with two softer trailing rings,
+   tinted by whatever made it. JS (addRipple) grows the ring as a flattened
+   ellipse, the way water looks from a low angle, and fades it with distance. */
+.ripple {
+  position: absolute;
+  width: 0;
+  height: 0;
+  transform: translate(-50%, -50%);
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  border-radius: 50%;
+  box-shadow:
+    0 0 7px rgba(255, 255, 255, 0.3),
+    inset 0 0 7px rgba(255, 255, 255, 0.15),
+    0 1.5px 0 rgba(0, 35, 55, 0.25); /* tiny shadow under the crest gives it depth */
+  pointer-events: none;
+}
+.ripple::before,
+.ripple::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px solid currentColor; /* tinted by the lotus that made it */
+}
+.ripple::before { inset: 9%; opacity: 0.55; }
+.ripple::after  { inset: 19%; opacity: 0.3; border-color: rgba(255, 255, 255, 0.85); }
 
 /* Respect users who prefer less motion: keep a steady glow, drop the
    drifting water, pulsing and ripples. Petal opening stays, because it
@@ -212,6 +441,8 @@ body.playable .flower.playing .bloom { filter: drop-shadow(0 0 18px currentColor
   .flower { transition: none; }
   .flower.droning .bloom { animation: none; filter: drop-shadow(0 0 8px currentColor); }
   .ripple { display: none; }
+  .flower::before, .reflection { animation: none; }
+  .flower.touched .pad, .flower.touched .bloom { animation: none; }
 }
 
 /* ---------- RESPONSIVE DESIGN SYSTEM ----------
@@ -220,16 +451,16 @@ body.playable .flower.playing .bloom { filter: drop-shadow(0 0 18px currentColor
 
 /* Expanded: 840px to 1199px */
 @media (min-width: 840px) {
-  :root { --flower-size: 44px; --status-size: 1.2rem; --button-size: 1.2rem; }
+  :root { --flower-size: 44px; --sun-size: 52px; --status-size: 1.2rem; --button-size: 1.2rem; }
 }
 
 /* Large: 1200px to 1600px */
 @media (min-width: 1200px) {
-  :root { --flower-size: 56px; --status-size: 1.4rem; --button-size: 1.4rem; }
+  :root { --flower-size: 56px; --sun-size: 64px; --status-size: 1.4rem; --button-size: 1.4rem; }
 }
 
 /* Extra-large: over 1600px */
 @media (min-width: 1601px) {
-  :root { --flower-size: 72px; --status-size: 1.8rem; --button-size: 1.8rem; }
+  :root { --flower-size: 72px; --sun-size: 84px; --status-size: 1.8rem; --button-size: 1.8rem; }
   #setup { width: 36rem; }
 }
