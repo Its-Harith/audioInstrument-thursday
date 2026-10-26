@@ -1,55 +1,235 @@
+/* ---------- DESIGN TOKENS ----------
+   Sizes live in variables so each screen-size breakpoint
+   only has to change a few values. */
+:root {
+  --water-top: #0f4c5c;
+  --water-mid: #0b3a53;
+  --water-deep: #082a40;
+  --accent: #f48fb1;
+  --accent-hover: #f8a9c4;
+  --text: #ffffff;
+  --panel: rgba(8, 42, 64, 0.75);
 
+  --flower-size: 36px;   /* lotus is built from this; whole lotus is 2x */
+  --status-size: 1rem;
+  --button-size: 1.1rem;
+}
+
+[hidden] { display: none !important; }
+
+/* ---------- BASE ---------- */
 body {
   height: 100vh;
   margin: 0;
-  background: #2e2a3d;
+  background: var(--water-mid);
   overflow: hidden;
   font-family: sans-serif;
-  color: white;
+  color: var(--text);
 }
 
 #status {
   position: fixed;
   top: 1rem;
   left: 1rem;
-  font-size: 1.2rem;
+  margin: 0;
+  z-index: 5;
+  font-size: var(--status-size);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
 }
 
-/* Start button doubles as the click browsers need before allowing audio */
-#start {
+/* ---------- WATER BACKGROUND ----------
+   A deep gradient with two slowly drifting layers: soft light
+   patches and faint ripple rings. Pure CSS, no images. */
+#water {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--water-top) 0%, var(--water-mid) 55%, var(--water-deep) 100%);
+}
+#water::before,
+#water::after {
+  content: "";
+  position: absolute;
+  inset: -15%;
+}
+#water::before {
+  background:
+    radial-gradient(ellipse at 20% 30%, rgba(120, 220, 230, 0.18), transparent 45%),
+    radial-gradient(ellipse at 78% 62%, rgba(120, 200, 240, 0.14), transparent 50%);
+  animation: drift 26s ease-in-out infinite alternate;
+}
+#water::after {
+  background: repeating-radial-gradient(circle at 50% 120%, transparent 0 38px, rgba(255, 255, 255, 0.04) 40px 42px);
+  animation: sway 18s ease-in-out infinite alternate;
+}
+@keyframes drift { to { transform: translate(4%, -3%) scale(1.08); } }
+@keyframes sway  { to { transform: translateY(-3%); } }
+
+/* ---------- SETUP PANEL ---------- */
+#setup {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  width: min(92vw, 30rem);
+  max-height: 90vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 1.75rem;
+  border-radius: 1.25rem;
+  background: var(--panel);
+  backdrop-filter: blur(8px);
+  text-align: center;
+  z-index: 4;
+}
+#setup h1 { margin: 0 0 0.5rem; font-weight: 600; letter-spacing: 0.05em; }
+.intro { margin: 0 0 1.25rem; line-height: 1.5; opacity: 0.9; }
+
+.presets { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1.25rem; }
+.preset {
+  flex: 1 1 8rem;
+  padding: 0.6rem 0.75rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 0.75rem;
+  background: transparent;
+  color: var(--text);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.preset span { display: block; font-size: 0.8rem; opacity: 0.8; }
+.preset:hover { background: rgba(255, 255, 255, 0.1); }
+.preset[aria-pressed="true"] { border-color: var(--accent); background: rgba(244, 143, 177, 0.2); }
+
+.fields { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.fields label { display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.9rem; text-align: left; }
+.fields input {
+  width: 8rem;
+  padding: 0.5rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 0.5rem;
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--text);
+  font-size: 1rem;
+}
+
+/* Start button doubles as the click browsers need before allowing audio */
+#start, #again {
   padding: 1rem 2.5rem;
-  font-size: 1.2rem;
+  font-size: var(--button-size);
   border: none;
   border-radius: 999px;
-  background: #e08ab3;
-  color: white;
+  background: var(--accent);
+  color: #3a1226;
+  font-weight: 600;
   cursor: pointer;
   transition: transform 0.2s ease, background 0.2s ease;
 }
-#start:hover { transform: translate(-50%, -50%) scale(1.1); background: #f0a0c8; }
-#start:active { transform: translate(-50%, -50%) scale(0.95); }
+#start:hover, #again:hover { transform: scale(1.08); background: var(--accent-hover); }
+#start:active, #again:active { transform: scale(0.96); }
+#again { position: fixed; top: 1rem; right: 1rem; padding: 0.6rem 1.5rem; z-index: 5; }
 
+/* Visible keyboard focus on every control */
+#start:focus-visible, #again:focus-visible, .preset:focus-visible,
+.fields input:focus-visible, .flower:focus-visible {
+  outline: 3px solid var(--text);
+  outline-offset: 3px;
+}
+
+/* ---------- LOTUS ----------
+   Each lotus is a lily pad with a fan of petals. Petals start
+   nearly closed (a bud) and slowly open over the time left in the
+   study phase, so the pond's blooming IS the timer. The opening
+   duration is set per lotus from JS via --bloom-time. */
 .flower {
   position: absolute;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  width: calc(var(--flower-size) * 2);
+  height: calc(var(--flower-size) * 2);
   transform: scale(0);
-  transition: transform 1.2s ease;
+  transition: transform 1.5s ease;
+  touch-action: none;
+  z-index: 1;
 }
 .flower.grown { transform: scale(1); }
 
-/* While a flower's note is sustaining it pulses gently, so you can
+.pad {
+  position: absolute;
+  left: 5%;
+  right: 5%;
+  bottom: 6%;
+  height: 42%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 40% 35%, #58b377, #2c6e4a);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.3);
+}
+
+.bloom { position: absolute; inset: 0; pointer-events: none; }
+
+.petal {
+  position: absolute;
+  left: calc(50% - var(--flower-size) * 0.21);
+  bottom: 27%;
+  width: calc(var(--flower-size) * 0.42);
+  height: var(--flower-size);
+  transform-origin: 50% 100%;
+  transform: rotate(calc(var(--angle) * 0.1)) scaleY(0.5);
+  transition: transform var(--bloom-time, 10s) ease-in-out;
+  background: linear-gradient(to top, #ffffff 0%, currentColor 85%);
+  border-radius: 50% 50% 45% 45% / 85% 85% 15% 15%;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+}
+.flower.open .petal { transform: rotate(var(--angle)) scaleY(1); }
+
+/* While a lotus's note is sustaining it glows gently, so you can
    see which flowers are contributing to the sound. */
-.flower.droning { animation: pulse 3s ease-in-out infinite; }
-@keyframes pulse {
-  0%, 100% { box-shadow: 0 0 6px 2px currentColor; }
-  50% { box-shadow: 0 0 22px 8px currentColor; }
+.flower.droning .bloom { animation: glow 3s ease-in-out infinite; }
+@keyframes glow {
+  0%, 100% { filter: drop-shadow(0 0 3px currentColor); }
+  50%      { filter: drop-shadow(0 0 14px currentColor); }
 }
 
 body.playable .flower { cursor: pointer; }
-body.playable .flower.playing { box-shadow: 0 0 26px 9px currentColor; }
+body.playable .flower.playing .bloom { filter: drop-shadow(0 0 18px currentColor) drop-shadow(0 0 6px #fff); }
+
+/* Ripple rings on the water when a lotus appears or is played */
+.ripple {
+  position: fixed;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(1);
+  animation: ripple 1.8s ease-out forwards;
+}
+@keyframes ripple { to { transform: translate(-50%, -50%) scale(9); opacity: 0; } }
+
+/* Respect users who prefer less motion: keep a steady glow, drop the
+   drifting water, pulsing and ripples. Petal opening stays, because it
+   is how elapsed time is shown. */
+@media (prefers-reduced-motion: reduce) {
+  #water::before, #water::after { animation: none; }
+  .flower { transition: none; }
+  .flower.droning .bloom { animation: none; filter: drop-shadow(0 0 8px currentColor); }
+  .ripple { display: none; }
+}
+
+/* ---------- RESPONSIVE DESIGN SYSTEM ----------
+   Medium (under 840px) is the base above. Larger screens
+   get bigger lotuses and text so targets stay easy to hit. */
+
+/* Expanded: 840px to 1199px */
+@media (min-width: 840px) {
+  :root { --flower-size: 44px; --status-size: 1.2rem; --button-size: 1.2rem; }
+}
+
+/* Large: 1200px to 1600px */
+@media (min-width: 1200px) {
+  :root { --flower-size: 56px; --status-size: 1.4rem; --button-size: 1.4rem; }
+}
+
+/* Extra-large: over 1600px */
+@media (min-width: 1601px) {
+  :root { --flower-size: 72px; --status-size: 1.8rem; --button-size: 1.8rem; }
+  #setup { width: 36rem; }
+}

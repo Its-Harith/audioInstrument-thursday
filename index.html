@@ -1,77 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Bloom — Sound Prototype 1: Growth Drone</title>
-
-<link rel="stylesheet" href="style.css">
-<script src="main.js" defer></script>
-
-
-<!-- <style>
-body {
-  height: 100vh;
-  margin: 0;
-  background: #2e2a3d;
-  overflow: hidden;
-  font-family: sans-serif;
-  color: white;
-}
-
-#status {
-  position: fixed;
-  top: 1rem;
-  left: 1rem;
-  font-size: 1.2rem;
-}
-
-/* Start button doubles as the click browsers need before allowing audio */
-#start {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  padding: 1rem 2.5rem;
-  font-size: 1.2rem;
-  border: none;
-  border-radius: 999px;
-  background: #e08ab3;
-  color: white;
-  cursor: pointer;
-  transition: transform 0.2s ease, background 0.2s ease;
-}
-#start:hover { transform: translate(-50%, -50%) scale(1.1); background: #f0a0c8; }
-#start:active { transform: translate(-50%, -50%) scale(0.95); }
-
-.flower {
-  position: absolute;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  transform: scale(0);
-  transition: transform 1.2s ease;
-}
-.flower.grown { transform: scale(1); }
-
-/* While a flower's note is sustaining it pulses gently, so you can
-   see which flowers are contributing to the sound. */
-.flower.droning { animation: pulse 3s ease-in-out infinite; }
-@keyframes pulse {
-  0%, 100% { box-shadow: 0 0 6px 2px currentColor; }
-  50% { box-shadow: 0 0 22px 8px currentColor; }
-}
-
-body.playable .flower { cursor: pointer; }
-body.playable .flower.playing { box-shadow: 0 0 26px 9px currentColor; }
-</style>
- -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bloom: a lotus pond that grows with your focus</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="main.js" defer></script>
 </head>
 <body>
 
-<div id="status">Press start to begin your session</div>
-<button id="start">Start session</button>
+  <!-- Decorative water background (animated in CSS) -->
+  <div id="water" aria-hidden="true"></div>
 
+  <!-- aria-live so screen readers announce the phase changes -->
+  <p id="status" aria-live="polite">Set your session, then press start</p>
 
+  <!-- Setup screen: Pomodoro (25 / 5) is selected by default -->
+  <main id="setup">
+    <h1>Bloom</h1>
+    <p class="intro">A lotus pond that grows while you focus. Listen to the harmony build, then play the pond during your break.</p>
+
+    <form id="settings">
+      <div class="presets" role="group" aria-label="Timer presets">
+        <button type="button" class="preset" data-preset="pomodoro" aria-pressed="true">Pomodoro <span>25 / 5 min</span></button>
+        <button type="button" class="preset" data-preset="long" aria-pressed="false">Long focus <span>50 / 10 min</span></button>
+        <button type="button" class="preset" data-preset="demo" aria-pressed="false">Quick demo <span>15 / 15 sec</span></button>
+      </div>
+
+      <div class="fields">
+        <label for="studyMinutes">Study time (minutes)
+          <input id="studyMinutes" type="number" min="0.25" max="180" step="any" value="25" required>
+        </label>
+        <label for="breakMinutes">Break time (minutes)
+          <input id="breakMinutes" type="number" min="0.25" max="60" step="any" value="5" required>
+        </label>
+      </div>
+
+      <button id="start" type="submit">Start session</button>
+    </form>
+  </main>
+
+  <!-- Shown when the break finishes -->
+  <button id="again" type="button" hidden>New session</button>
 
 </body>
 </html>
