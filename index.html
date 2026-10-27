@@ -27,8 +27,9 @@
     <canvas id="glitter"></canvas>
   </div>
 
-  <!-- aria-live so screen readers announce the phase changes -->
-  <p id="status" aria-live="polite">Set your session, then press start</p>
+  <!-- Caption bar: a label (Study / Break) plus a short message.
+       aria-live so screen readers announce the phase changes -->
+  <p id="status" aria-live="polite"><span class="tag">Ready</span><span class="msg">Set your session, then press start</span></p>
 
   <!-- Setup screen: Pomodoro (25 / 5) is selected by default -->
   <main id="setup">

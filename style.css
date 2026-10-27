@@ -29,14 +29,48 @@ body {
   color: var(--text);
 }
 
+/* Caption bar: tells the user which phase they're in. Styled like the setup
+   panel (frosted, rounded) so it reads as part of the interface, and sits at
+   the bottom so it never covers the sun. */
 #status {
   position: fixed;
-  top: 1rem;
-  left: 1rem;
+  bottom: 1.25rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: max-content; /* size to the text instead of the space right of the centre line */
+  max-width: calc(100vw - 2rem);
+  box-sizing: border-box;
   margin: 0;
-  z-index: 5;
+  padding: 0.5rem 1.2rem 0.5rem 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: var(--panel);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 6px 18px rgba(0, 30, 50, 0.25);
   font-size: var(--status-size);
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  z-index: 5;
+}
+#status .tag {
+  flex: none;
+  padding: 0.25rem 0.8rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #3a1226;
+  font-size: 0.75em;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+#status.error .tag { background: #ff8080; }
+/* The text eases in each time the phase changes */
+#status.swap .tag,
+#status.swap .msg { animation: status-in 0.6s ease; }
+@keyframes status-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
 }
 
 /* ---------- WATER BACKGROUND ----------
@@ -441,6 +475,7 @@ body.playable .flower.playing .bloom { filter: drop-shadow(0 0 18px currentColor
   .flower { transition: none; }
   .flower.droning .bloom { animation: none; filter: drop-shadow(0 0 8px currentColor); }
   .ripple { display: none; }
+  #status.swap .tag, #status.swap .msg { animation: none; }
   .flower::before, .reflection { animation: none; }
   .flower.touched .pad, .flower.touched .bloom { animation: none; }
 }

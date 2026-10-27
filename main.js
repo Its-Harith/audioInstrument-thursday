@@ -40,6 +40,8 @@ const frontPetals = [  // wide petals that spread low and sideways, with a short
 const WAVE_SPEED = 280;
 
 const statusEl = document.getElementById("status");
+const statusTag = statusEl.querySelector(".tag");
+const statusMsg = statusEl.querySelector(".msg");
 const setupPanel = document.getElementById("setup");
 const form = document.getElementById("settings");
 const studyInput = document.getElementById("studyMinutes");
@@ -60,10 +62,19 @@ let sunX = 0;        // sun's horizontal position in px, used to centre the refl
 let sunGlint = 0;    // 0 to 1, how strongly the sun is reflected (0 once it has set)
 let sunHue = 50;     // current sun colour, so the reflection matches it
 
+// Update the caption bar: a short label (Study / Break) and a message
+function setStatus(tag, message) {
+  statusTag.textContent = tag;
+  statusMsg.textContent = message;
+  statusEl.classList.remove("swap");
+  void statusEl.offsetWidth; // restart the fade-in animation
+  statusEl.classList.add("swap");
+}
+
 // If anything goes wrong, show it on screen instead of failing silently
 window.onerror = function (message) {
-  statusEl.textContent = "Error: " + message;
-  statusEl.style.color = "#ff8080";
+  statusEl.classList.add("error");
+  setStatus("Error", String(message));
 };
 
 // ---------- SETUP SCREEN ----------
@@ -263,7 +274,7 @@ form.addEventListener("submit", function (event) {
   setupAudio(studyMs);
 
   setupPanel.hidden = true;
-  statusEl.textContent = "Study phase: watch the sun cross the sky";
+  setStatus("Study", "Watch the sun cross the sky");
   studyPhase(studyMs, breakMs);
 });
 
@@ -514,7 +525,7 @@ function pickPosition(size) {
   const margin = 20;
   const top = sky.offsetHeight + 60; // keep lotuses on open water, clear of the pale horizon haze
   const maxX = Math.max(0, window.innerWidth - size - margin * 2);
-  const maxY = Math.max(0, window.innerHeight - size - top - margin);
+  const maxY = Math.max(0, window.innerHeight - size - top - 80); // leave room for the caption bar at the bottom
   let spot = null;
   for (let tries = 0; tries < 40; tries++) {
     spot = { x: margin + Math.random() * maxX, y: top + Math.random() * maxY };
@@ -667,7 +678,7 @@ function startBreak(breakMs) {
   flowers.forEach(function (f) { f.classList.remove("droning"); });
 
   document.body.classList.add("playable");
-  statusEl.textContent = "Break: press a lotus and let the ripples play the pond";
+  setStatus("Break", "Press a lotus and let the ripples play the pond");
 
   flowers.forEach(function (flower) {
     const note = flower.dataset.note;
@@ -720,6 +731,6 @@ function endBreak() {
     flower.removeAttribute("tabindex");
   });
 
-  statusEl.textContent = "Break over. Ready for another session?";
+  setStatus("Done", "Break over. Ready for another session?");
   againButton.hidden = false;
 }
