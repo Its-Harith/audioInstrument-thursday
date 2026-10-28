@@ -1,27 +1,44 @@
-9e12619,Harry,2026-10-28,fixed the criquets sound in night mode
-94f18ec,Harry,2026-10-28,added the js for the night and day modes
-4474af2,Harry,2026-10-28,added night and day mode
-a32f622,Harry,2026-10-28,added the js for the mood change
-553beec,Harry,2026-10-28,added more options in the home page
-9299469,Harry,2026-10-27,Update, new visuals, sound and ripples
-a4bd467,Harry,2026-10-26,Add Bloom styling: water, sky, lotus and responsive breakpoints
-2b9d136,Harry,2026-10-26,Add Bloom page structure with Pomodoro start screen
-9019dbb,Harry,2026-10-22,merged prototype 5 into he main
-a4b15f4,Harry,2026-10-22,Merge branch 'prototype-5-bloom'
-cd01132,Harry,2026-09-28,fixed coding
-988a68e,Harry,2026-09-28,typo
-e5e5ffc,Harry,2026-09-28,yml
-3235fa5,Harry,2026-09-28,yml file
-eb3b0a2,Harry,2026-09-28,Add sound-based information design prototype
-cdbbd93,Harry,2026-09-22,Create commit_history.csv
-70b092b,Harry,2026-09-10,fixed he branch
-eeb2ade,Harry,2026-09-10,works
-ab4890d,Harry,2026-09-03,j
-97a611c,Harry,2026-09-02,made some changes
-3bdae10,Harry,2026-08-27,added play sound button
-a5d64f8,Harry,2026-08-20,done some work on hover press and decided the note playing and added a not button.
-3e8a197,Harry,2026-08-18,fixed make sound button, removed the second button
-f7e2b62,Harry,2026-08-13,done some changes
-485ae19,Harry,2026-08-13,made changes
-4fdf30e,Harry,2026-07-30,sound  test
-c7b98eb,Harry,2026-07-30,project innit
+Harry,Wed Oct 28 21:20:41 2026 +1100,Update commit log,
+Harry,Wed Oct 28 15:21:40 2026 +1100,fixed the criquets sound in night mode,
+Harry,Wed Oct 28 15:17:05 2026 +1100,added the js for the night and day modes,added some butterflies in the day mode and some fireflies during night mode
+
+Harry,Wed Oct 28 15:12:55 2026 +1100,added night and day mode,added extra options in the homescreen, for night and day more
+
+Harry,Wed Oct 28 15:11:48 2026 +1100,added the js for the mood change,tried the mood changing during break time and how the sound changed
+
+Harry,Wed Oct 28 14:52:23 2026 +1100,added more options in the home page,added two moods, bright and mellow, edited the css and html
+
+Harry,Tue Oct 27 19:56:52 2026 +1100,Update, new visuals, sound and ripples,Added the lotus pond with water and a sun that crosses the sky. Improved the harmony sound with reverb. Tapping a lotus now sends ripples that chime the others. Redesigned the lotus and replaced the floating text with a caption bar
+
+Harry,Mon Oct 26 20:25:15 2026 +1100,Add Bloom styling: water, sky, lotus and responsive breakpoints,Design tokens for colour and size. Turquoise water with soft streaks of light, a sky band that turns from day blue to sunset, the sun reflection and horizon haze, layered lotus petals with a reflection, one shared ripple style, and breakpoints for medium (under 840px), expanded, large and extra-large screens. Reduced-motion users get calmer animation.
+
+Harry,Mon Oct 26 20:22:47 2026 +1100,Add Bloom page structure with Pomodoro start screen,Semantic HTML for the Bloom instrument. A start panel lets the user pick a preset (Pomodoro 25/5 is selected by default, plus Long focus and a Quick demo) or type their own study and break times. Includes the sky, pond and water layers and an aria-live status line so screen readers hear phase changes
+
+Harry,Thu Oct 22 11:14:07 2026 +1100,merged prototype 5 into he main,i also moved js and css into their own folders
+
+Harry,Thu Oct 22 11:06:16 2026 +1100,Merge branch 'prototype-5-bloom',
+Harry,Mon Sep 28 21:26:14 2026 +1000,fixed coding,
+Harry,Mon Sep 28 20:29:35 2026 +1000,typo,
+Harry,Mon Sep 28 20:28:30 2026 +1000,yml,
+Harry,Mon Sep 28 20:12:36 2026 +1000,yml file,
+Harry,Mon Sep 28 14:28:31 2026 +1000,Add sound-based information design prototype,Information Design prototype that communicates elapsed time through
+sound instead of visuals alone. Each flower that grows adds a
+sustained sine note at its own pitch, all from one pentatonic scale,
+so the harmony builds as the session progresses. In the break phase
+the sustained notes fade out and the same notes become playable by
+pressing flowers. Uses the Web Audio API directly instead of Tone.js
+to avoid an external library dependency.
+
+Harry,Tue Sep 22 11:59:27 2026 +1000,Create commit_history.csv,
+Harry,Thu Sep 10 11:42:38 2026 +1000,fixed he branch,
+Harry,Thu Sep 10 11:04:25 2026 +1000,works,
+Harry,Thu Sep 3 18:06:29 2026 +1000,j,
+Harry,Wed Sep 2 20:48:45 2026 +1000,made some changes,
+Harry,Thu Aug 27 10:14:00 2026 +1000,added play sound button,
+Harry,Thu Aug 20 11:58:23 2026 +1000,done some work on hover press and decided the note playing and added a not button.,
+Harry,Tue Aug 18 12:30:03 2026 +1000,fixed make sound button, removed the second button,
+Harry,Thu Aug 13 18:41:21 2026 +1000,done some changes,
+Harry,Thu Aug 13 10:56:48 2026 +1000,made changes,
+Harry,Thu Jul 30 12:20:28 2026 +1000,sound  test,we make the button makes sound and we tested it and it's working!
+
+Harry,Thu Jul 30 12:04:34 2026 +1000,project innit,made the basic files and linked them in together
