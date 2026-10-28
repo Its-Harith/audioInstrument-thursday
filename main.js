@@ -364,7 +364,7 @@ function pluck(note, strength) {
 // about 55 ms apart, repeated roughly twice a second. Four crickets at
 // slightly different pitches and rhythms, with a few chirps skipped at
 // random, sound like a field rather than a machine.
-const CRICKET_VOLUME = 0.035; // overall loudness of the crickets (try 0.02 for quieter)
+const CRICKET_VOLUME = 0.012; // overall loudness of the crickets (0 = silent)
 let cricketBus = null;
 let cricketTimer = null;
 const crickets = [];
@@ -372,9 +372,14 @@ const crickets = [];
 function startCrickets() {
   cricketBus = audioCtx.createGain();
   cricketBus.gain.value = 0; // faded in by setCrickets
-  cricketBus.connect(mix);
+  // A lowpass takes the piercing edge off so they sit far away in the background
+  const soften = audioCtx.createBiquadFilter();
+  soften.type = "lowpass";
+  soften.frequency.value = 3200;
+  cricketBus.connect(soften);
+  soften.connect(mix);
 
-  [4300, 4650, 5000, 5350].forEach(function (freq, i) {
+  [3000, 3400].forEach(function (freq, i) {
     const osc = audioCtx.createOscillator();
     osc.type = "sine";
     osc.frequency.value = freq;
@@ -387,7 +392,7 @@ function startCrickets() {
       osc: osc,
       env: env,
       next: audioCtx.currentTime + Math.random() * 2, // when this cricket chirps next
-      rate: 1.7 + Math.random() * 0.9,                // chirps per second
+      rate: 0.7 + Math.random() * 0.5,                // chirps per second
       pulses: 3 + (i % 2)                             // pulses in each chirp
     });
   });
@@ -403,12 +408,12 @@ function scheduleCrickets() {
   crickets.forEach(function (c) {
     while (c.next < now + 1.2) {
       const start = Math.max(c.next, now);
-      if (Math.random() > 0.15) { // skip some chirps so it isn't a machine
+      if (Math.random() > 0.3) { // skip some chirps so it isn't a machine
         for (let k = 0; k < c.pulses; k++) {
           const t = start + k * 0.055;
           c.env.gain.setValueAtTime(0, t);
-          c.env.gain.linearRampToValueAtTime(0.5, t + 0.012);
-          c.env.gain.linearRampToValueAtTime(0, t + 0.042);
+          c.env.gain.linearRampToValueAtTime(0.5, t + 0.02);
+          c.env.gain.linearRampToValueAtTime(0, t + 0.05);
         }
       }
       c.next = start + (1 / c.rate) * (0.85 + Math.random() * 0.3);
