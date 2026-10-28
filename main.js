@@ -7,13 +7,34 @@ const PRESETS = {
   demo: { study: 0.25, rest: 0.25 }
 };
 
-// One note per flower, all from the same pentatonic scale across
-// octaves, so any number of them sounding together stays harmonious.
-// Low notes come first, so the harmony grows from a deep base upward.
-const flowerNotes = ["C3", "G3", "C4", "D4", "E4", "G4", "A4", "C5"];
+// Mood: which scale the notes come from, and how soft the sound is.
+// One note per flower, all from the same pentatonic scale (five notes per
+// octave), so any number of them sounding together stays harmonious.
+// "Bright" is a major pentatonic: lively and clear. "Mellow" is a minor
+// pentatonic, which sounds softer and more wistful, with a darker filter,
+// slower fade-ins and gentler chimes. Low notes come first, so the harmony
+// grows from a deep base upward.
+const MOODS = {
+  bright: {
+    notes: ["C3", "G3", "C4", "D4", "E4", "G4", "A4", "C5"],
+    filterMax: 2600,   // how far the growth harmony's filter opens by the end (Hz)
+    droneAttack: 4,    // seconds for each growth note to fade in
+    pluckBase: 700,    // chime brightness in Hz is pluckBase + pluckRange * strength
+    pluckRange: 3300
+  },
+  mellow: {
+    notes: ["C3", "G3", "C4", "Eb4", "F4", "G4", "Bb4", "C5"],
+    filterMax: 1400,
+    droneAttack: 6,
+    pluckBase: 500,
+    pluckRange: 1700
+  }
+};
+let mood = MOODS.bright;           // set from the start screen when a session begins
+let flowerNotes = mood.notes;
 const frequencies = {
-  C3: 130.81, G3: 196.0, C4: 261.63, D4: 293.66,
-  E4: 329.63, G4: 392.0, A4: 440.0, C5: 523.25
+  C3: 130.81, G3: 196.0, C4: 261.63, D4: 293.66, Eb4: 311.13, E4: 329.63,
+  F4: 349.23, G4: 392.0, A4: 440.0, Bb4: 466.16, C5: 523.25
 };
 // Lotus colours: rose, pink, blush, orchid and a warm peach-pink
 const colors = ["#ec6fa5", "#f48fb1", "#f7a8c6", "#d988c9", "#f9a98f"];
@@ -46,10 +67,12 @@ const setupPanel = document.getElementById("setup");
 const form = document.getElementById("settings");
 const studyInput = document.getElementById("studyMinutes");
 const breakInput = document.getElementById("breakMinutes");
-const presetButtons = document.querySelectorAll(".preset");
+const presetButtons = document.querySelectorAll(".presets .preset");
+const moodButtons = document.querySelectorAll(".moods .preset");
 const againButton = document.getElementById("again");
 const sky = document.getElementById("sky");
 const sun = document.getElementById("sun");
+const moon = document.getElementById("moon");
 const pond = document.getElementById("pond");
 const glitterCanvas = document.getElementById("glitter");
 const glitterCtx = glitterCanvas.getContext("2d");
@@ -60,7 +83,8 @@ let breakActive = false;
 let sunProgress = 0; // 0 = sunrise, 1 = fully set; kept so resizing can re-place the sun
 let sunX = 0;        // sun's horizontal position in px, used to centre the reflection
 let sunGlint = 0;    // 0 to 1, how strongly the sun is reflected (0 once it has set)
-let sunHue = 50;     // current sun colour, so the reflection matches it
+let moonProgress = 0; // 0 = moonrise, 1 = set (the break is over)
+let glitterColour = { h: 50, s: 95, l: 70 }; // colour of the warm dashes in the reflection (sun or moon)
 
 // Update the caption bar: a short label (Study / Break) and a message
 function setStatus(tag, message) {
@@ -99,6 +123,17 @@ presetButtons.forEach(function (button) {
 });
 studyInput.addEventListener("input", syncPresetButtons);
 breakInput.addEventListener("input", syncPresetButtons);
+
+// Mood buttons: pick the bright or mellow scale (Bright is the default)
+let selectedMood = "bright";
+moodButtons.forEach(function (button) {
+  button.addEventListener("click", function () {
+    selectedMood = button.dataset.mood;
+    moodButtons.forEach(function (b) {
+      b.setAttribute("aria-pressed", b === button ? "true" : "false");
+    });
+  });
+});
 
 // Keep typed values inside sensible limits
 function clamp(value, min, max, fallback) {
@@ -181,7 +216,7 @@ function setupAudio(studyMs) {
   droneFilter.type = "lowpass";
   droneFilter.Q.value = 0.7;
   droneFilter.frequency.setValueAtTime(450, now);
-  droneFilter.frequency.linearRampToValueAtTime(2600, now + studyMs / 1000);
+  droneFilter.frequency.linearRampToValueAtTime(mood.filterMax, now + studyMs / 1000);
   droneFilter.connect(mix);
 
   // A very slow LFO makes the filter breathe in and out, so the sustained
@@ -245,7 +280,7 @@ function pluck(note, strength) {
   // A lowpass filter makes distant chimes (low strength) duller and mellower
   const soften = audioCtx.createBiquadFilter();
   soften.type = "lowpass";
-  soften.frequency.value = 700 + 3300 * strength;
+  soften.frequency.value = mood.pluckBase + mood.pluckRange * strength;
   env.connect(soften);
   soften.connect(mix);
 
@@ -271,6 +306,9 @@ form.addEventListener("submit", function (event) {
   const studyMs = clamp(studyInput.value, 0.25, 180, 25) * 60 * 1000;
   const breakMs = clamp(breakInput.value, 0.25, 60, 5) * 60 * 1000;
 
+  mood = MOODS[selectedMood];
+  flowerNotes = mood.notes;
+
   setupAudio(studyMs);
 
   setupPanel.hidden = true;
@@ -288,22 +326,29 @@ function mixColour(a, b, t) {
   return "rgb(" + a.map(function (v, i) { return Math.round(v + (b[i] - v) * t); }).join(",") + ")";
 }
 
-// progress p runs from 0 to 1 across the study phase. The sun travels
-// left to right and follows an arc: it rises from the water line, peaks
-// halfway, then sinks back into the water as p reaches 1.
-function placeSun(p) {
-  sunProgress = p;
+// Put the sun or the moon on its arc across the sky. p runs from 0 to 1:
+// the body travels left to right, rising from the water line, peaking
+// halfway, then sinking back into the water as p reaches 1.
+// Returns its horizontal position (px) and height (0 to 1).
+function placeBody(el, p) {
   const w = sky.clientWidth;
   const h = sky.clientHeight;
-  const s = sun.offsetWidth;
+  const s = el.offsetWidth;
 
-  const x = s + p * (w - 2 * s);            // keep one sun-width clear of each edge
-  const hiddenY = h + s * 0.6;              // sun centre low enough to be fully below the water line
+  const x = s + p * (w - 2 * s);            // keep one body-width clear of each edge
+  const hiddenY = h + s * 0.6;              // centre low enough to be fully below the water line
   const topY = s * 0.9;                     // highest point of the arc
   const lift = Math.pow(Math.sin(Math.PI * p), 0.7); // 0 at both ends, 1 at the middle (0.7 flattens the peak)
   const y = hiddenY - (hiddenY - topY) * lift;
 
-  sun.style.transform = "translate(" + (x - s / 2) + "px, " + (y - s / 2) + "px)";
+  el.style.transform = "translate(" + (x - s / 2) + "px, " + (y - s / 2) + "px)";
+  return { x: x, lift: lift };
+}
+
+// The sun shows how much study time has passed (p = 0 to 1 over the study phase).
+function placeSun(p) {
+  sunProgress = p;
+  const body = placeBody(sun, p);
 
   // Colour warms from pale gold to deep orange and the sky turns to dusk.
   // These are CSS variables on the page root, so the sky, haze, water
@@ -314,13 +359,36 @@ function placeSun(p) {
   root.setProperty("--sun-color", "hsl(" + hue + ", 95%, 62%)");
   root.setProperty("--sun-glow", "hsla(" + hue + ", 95%, 60%, 0.45)");
   root.setProperty("--dusk", dusk.toFixed(3));
+  root.setProperty("--night", "0");
   root.setProperty("--haze", mixColour([207, 234, 242], [255, 154, 92], dusk)); // day blue-white to sunset orange
-  root.setProperty("--sun-x", x.toFixed(1) + "px");
-  root.setProperty("--glint", Math.min(1, lift * 1.6).toFixed(3)); // reflection fades as the sun sinks
+  root.setProperty("--sun-x", body.x.toFixed(1) + "px");
+  root.setProperty("--glint", Math.min(1, body.lift * 1.6).toFixed(3)); // reflection fades as the sun sinks
 
-  sunX = x;
-  sunGlint = Math.min(1, lift * 1.6);
-  sunHue = hue;
+  sunX = body.x;
+  sunGlint = Math.min(1, body.lift * 1.6);
+  glitterColour = { h: hue, s: 95, l: 70 };
+}
+
+// The moon shows how much break time has passed (q = 0 to 1 over the break).
+// As it rises, the sunset fades out and the sky and water turn to night.
+function placeMoon(q) {
+  moonProgress = q;
+  const body = placeBody(moon, q);
+
+  const dusk = Math.max(0, 1 - q / 0.6); // sunset colours fade out over the first 60% of the break
+  const night = Math.min(1, q / 0.45);   // the night sky fades in over the first 45%
+  const root = document.documentElement.style;
+  root.setProperty("--dusk", dusk.toFixed(3));
+  root.setProperty("--night", night.toFixed(3));
+  root.setProperty("--haze", mixColour([66, 82, 136], [255, 154, 92], dusk)); // night blue, with a last glow of sunset
+  root.setProperty("--sun-glow", "rgba(190, 210, 255, 0.3)");               // cool moonlight on the water
+  root.setProperty("--sun-x", body.x.toFixed(1) + "px");
+  const glint = Math.min(1, body.lift * 1.6) * 0.7; // moonlight is gentler than sunlight
+  root.setProperty("--glint", glint.toFixed(3));
+
+  sunX = body.x; // the reflection follows whichever body is up
+  sunGlint = glint;
+  glitterColour = { h: 218, s: 70, l: 88 };
 }
 
 // ---------- SUN REFLECTION ----------
@@ -340,7 +408,7 @@ function drawGlitter(now) {
   const w = glitterCanvas.width;
   const h = glitterCanvas.height;
   glitterCtx.clearRect(0, 0, w, h);
-  if (sunGlint < 0.01) return; // sun is down: nothing to reflect
+  if (sunGlint < 0.01) return; // nothing in the sky: nothing to reflect
 
   const t = reducedMotion ? 0 : now; // reduced motion: a still reflection
   const s = sun.offsetWidth;
@@ -365,7 +433,7 @@ function drawGlitter(now) {
       const alpha = (0.25 + rnd(seed + 4) * 0.55) * fade * (1 - Math.abs(offset) * 0.6);
 
       glitterCtx.fillStyle = k % 3 === 0
-        ? "hsla(" + sunHue + ", 95%, 70%, " + alpha.toFixed(3) + ")"  // warm, matches the sun
+        ? "hsla(" + glitterColour.h + ", " + glitterColour.s + "%, " + glitterColour.l + "%, " + alpha.toFixed(3) + ")"  // matches the sun or moon
         : "rgba(255, 255, 255, " + alpha.toFixed(3) + ")";
       glitterCtx.fillRect(dashX - length / 2, y, length, 1.6);
     }
@@ -401,9 +469,29 @@ function runSun(studyMs, startTime) {
   frame();
 }
 
+// Same idea for the moon, driven by the real clock over the break.
+function runMoon(breakMs, startTime) {
+  function frame() {
+    const q = Math.min(1, (Date.now() - startTime) / breakMs);
+    placeMoon(q);
+    if (q < 1) {
+      requestAnimationFrame(frame);
+    } else {
+      // The moon has set: a soft ripple where it met the water
+      makeRipple(sky.clientWidth - moon.offsetWidth, sky.clientHeight, "#cfd9ff", { maxR: 200, speed: 100, strength: 0.8 });
+    }
+  }
+  frame();
+}
+
 // Keep the sun in the right place if the window is resized
-window.addEventListener("resize", function () { sizeGlitter(); placeSun(sunProgress); });
-placeSun(0); // starts hidden below the water line
+window.addEventListener("resize", function () {
+  sizeGlitter();
+  placeSun(sunProgress);
+  if (moonProgress > 0) placeMoon(moonProgress); // during the break the moon sets the sky colours
+});
+placeSun(0);     // the sun starts hidden below the water line
+placeBody(moon, 0); // and so does the moon
 
 // ---------- STUDY PHASE ----------
 // A lotus appears at an even interval. Each one adds its own note
@@ -603,7 +691,7 @@ function spawnFlower(note, remainingMs) {
   makeRipple(c.x, c.y, color, { maxR: 120, speed: 70, strength: 0.8 }); // a soft ring as it appears
 
   // This flower's sustained note: a soft layered tone with a slow 4 second fade-in
-  startVoice(droneVoices, note, DRONE_LAYERS, 0.055, 4, droneFilter);
+  startVoice(droneVoices, note, DRONE_LAYERS, 0.055, mood.droneAttack, droneFilter);
 }
 
 // ---------- WAVES (break phase) ----------
@@ -708,6 +796,7 @@ function startBreak(breakMs) {
     flower.addEventListener("keyup", stop);
   });
 
+  runMoon(breakMs, Date.now()); // the moon crosses the sky over the break
   setTimeout(endBreak, breakMs);
 }
 
