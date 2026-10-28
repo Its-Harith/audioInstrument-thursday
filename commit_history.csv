@@ -1,12 +1,27 @@
-Harry,Thu Sep 10 11:42:38 2026 +1000,fixed he branch,
-Harry,Thu Sep 10 11:04:25 2026 +1000,works,
-Harry,Thu Sep 3 18:06:29 2026 +1000,j,
-Harry,Wed Sep 2 20:48:45 2026 +1000,made some changes,
-Harry,Thu Aug 27 10:14:00 2026 +1000,added play sound button,
-Harry,Thu Aug 20 11:58:23 2026 +1000,done some work on hover press and decided the note playing and added a not button.,
-Harry,Tue Aug 18 12:30:03 2026 +1000,fixed make sound button, removed the second button,
-Harry,Thu Aug 13 18:41:21 2026 +1000,done some changes,
-Harry,Thu Aug 13 10:56:48 2026 +1000,made changes,
-Harry,Thu Jul 30 12:20:28 2026 +1000,sound  test,we make the button makes sound and we tested it and it's working!
-
-Harry,Thu Jul 30 12:04:34 2026 +1000,project innit,made the basic files and linked them in together
+9e12619,Harry,2026-10-28,fixed the criquets sound in night mode
+94f18ec,Harry,2026-10-28,added the js for the night and day modes
+4474af2,Harry,2026-10-28,added night and day mode
+a32f622,Harry,2026-10-28,added the js for the mood change
+553beec,Harry,2026-10-28,added more options in the home page
+9299469,Harry,2026-10-27,Update, new visuals, sound and ripples
+a4bd467,Harry,2026-10-26,Add Bloom styling: water, sky, lotus and responsive breakpoints
+2b9d136,Harry,2026-10-26,Add Bloom page structure with Pomodoro start screen
+9019dbb,Harry,2026-10-22,merged prototype 5 into he main
+a4b15f4,Harry,2026-10-22,Merge branch 'prototype-5-bloom'
+cd01132,Harry,2026-09-28,fixed coding
+988a68e,Harry,2026-09-28,typo
+e5e5ffc,Harry,2026-09-28,yml
+3235fa5,Harry,2026-09-28,yml file
+eb3b0a2,Harry,2026-09-28,Add sound-based information design prototype
+cdbbd93,Harry,2026-09-22,Create commit_history.csv
+70b092b,Harry,2026-09-10,fixed he branch
+eeb2ade,Harry,2026-09-10,works
+ab4890d,Harry,2026-09-03,j
+97a611c,Harry,2026-09-02,made some changes
+3bdae10,Harry,2026-08-27,added play sound button
+a5d64f8,Harry,2026-08-20,done some work on hover press and decided the note playing and added a not button.
+3e8a197,Harry,2026-08-18,fixed make sound button, removed the second button
+f7e2b62,Harry,2026-08-13,done some changes
+485ae19,Harry,2026-08-13,made changes
+4fdf30e,Harry,2026-07-30,sound  test
+c7b98eb,Harry,2026-07-30,project innit
