@@ -10,11 +10,41 @@
   --text: #ffffff;
   --panel: rgba(20, 78, 100, 0.72);
 
+  /* Sky and pad colours are tokens too, so each mood can restyle them */
+  --sky-top: #2f6f9f;
+  --sky-mid: #7fbfdc;
+  --sky-low: #cfeaf2;
+  --dusk-top: #3b2350;
+  --dusk-mid: #a2476b;
+  --dusk-low: #ff9a5c;
+  --pad-a: #8cc4ad;
+  --pad-b: #3f8575;
+
   --horizon: clamp(110px, 18vh, 220px);  /* height of the sky band */
   --sun-size: 44px;
   --flower-size: 36px;   /* lotus is built from this; whole lotus is 2x */
   --status-size: 1rem;
   --button-size: 1.1rem;
+}
+
+/* MOOD: choosing Mellow on the start screen swaps the whole palette (water,
+   sky, sunset, pads and buttons) from lively turquoise and pink to soft
+   dusky blue and lilac. Bright is the default set of values above. */
+:root[data-mood="mellow"] {
+  --water-top: #6a8fb4;
+  --water-mid: #4a6f9c;
+  --water-deep: #34527f;
+  --accent: #c4a8ea;
+  --accent-hover: #d6c2f2;
+  --panel: rgba(52, 64, 112, 0.72);
+  --sky-top: #6b7fb8;
+  --sky-mid: #a9a6d0;
+  --sky-low: #e6d9ec;
+  --dusk-top: #3f2d5c;
+  --dusk-mid: #9a5b8a;
+  --dusk-low: #f0a3a0;
+  --pad-a: #9cc2bc;
+  --pad-b: #52857f;
 }
 
 [hidden] { display: none !important; }
@@ -122,13 +152,13 @@ body {
   right: 0;
   height: var(--horizon);
   overflow: hidden;
-  background: linear-gradient(180deg, #2f6f9f 0%, #7fbfdc 70%, #cfeaf2 100%);
+  background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 70%, var(--sky-low) 100%);
 }
 #sky::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, #3b2350 0%, #a2476b 60%, #ff9a5c 100%);
+  background: linear-gradient(180deg, var(--dusk-top) 0%, var(--dusk-mid) 60%, var(--dusk-low) 100%);
   opacity: var(--dusk, 0);
 }
 #sun {
@@ -262,10 +292,21 @@ body {
 
 .group-label { margin: 0 0 0.4rem; font-size: 0.85rem; opacity: 0.85; }
 
+/* Butterflies and fireflies are drawn on this canvas by JS (see drawCreatures).
+   It sits above the lotuses but never blocks a tap. */
+#creatures {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
 /* ---------- SETUP PANEL ---------- */
 #setup {
   position: fixed;
-  top: 50%;
+  top: calc(50% - 1.75rem);
   left: 50%;
   transform: translate(-50%, -50%);
   width: min(92vw, 30rem);
@@ -282,7 +323,7 @@ body {
 #setup h1 { margin: 0 0 0.5rem; font-weight: 600; letter-spacing: 0.05em; }
 .intro { margin: 0 0 1.25rem; line-height: 1.5; opacity: 0.9; }
 
-.presets, .moods { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1.25rem; }
+.presets, .moods, .times { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin-bottom: 0.9rem; }
 .preset {
   flex: 1 1 8rem;
   padding: 0.6rem 0.75rem;
@@ -296,9 +337,9 @@ body {
 }
 .preset span { display: block; font-size: 0.8rem; opacity: 0.8; }
 .preset:hover { background: rgba(255, 255, 255, 0.1); }
-.preset[aria-pressed="true"] { border-color: var(--accent); background: rgba(244, 143, 177, 0.2); }
+.preset[aria-pressed="true"] { border-color: var(--accent); background: rgba(255, 255, 255, 0.14); }
 
-.fields { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.fields { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1.1rem; }
 .fields label { display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.9rem; text-align: left; }
 .fields input {
   width: 8rem;
@@ -390,7 +431,7 @@ body {
     radial-gradient(circle at 78% 46%, rgba(255, 255, 255, 0.95) 0 1.1px, rgba(255, 255, 255, 0.3) 1.3px 2.6px, transparent 3px),
     radial-gradient(circle at 64% 76%, rgba(255, 255, 255, 0.95) 0 1px, rgba(255, 255, 255, 0.3) 1.2px 2.4px, transparent 2.8px),
     repeating-conic-gradient(from 0deg at 50% 50%, rgba(255, 255, 255, 0.12) 0 1.2deg, transparent 1.2deg 24deg),
-    radial-gradient(ellipse at 40% 35%, #8cc4ad, #3f8575);
+    radial-gradient(ellipse at 40% 35%, var(--pad-a), var(--pad-b));
   box-shadow: 0 5px 9px rgba(0, 40, 60, 0.25), inset 0 -3px 5px rgba(0, 70, 50, 0.25);
 }
 .pad::after {

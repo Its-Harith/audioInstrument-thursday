@@ -29,6 +29,9 @@
     <canvas id="glitter"></canvas>
   </div>
 
+  <!-- Butterflies (day) and fireflies (night), drawn by JS -->
+  <canvas id="creatures" aria-hidden="true"></canvas>
+
   <!-- Caption bar: a label (Study / Break) plus a short message.
        aria-live so screen readers announce the phase changes -->
   <p id="status" aria-live="polite"><span class="tag">Ready</span><span class="msg">Set your session, then press start</span></p>
@@ -44,6 +47,12 @@
         <button type="button" class="preset" data-preset="pomodoro" aria-pressed="true">Pomodoro <span>25 / 5 min</span></button>
         <button type="button" class="preset" data-preset="long" aria-pressed="false">Long focus <span>50 / 10 min</span></button>
         <button type="button" class="preset" data-preset="demo" aria-pressed="false">Quick demo <span>15 / 15 sec</span></button>
+      </div>
+
+      <p class="group-label" id="timeLabel">Time of day</p>
+      <div class="times" role="group" aria-labelledby="timeLabel">
+        <button type="button" class="preset" data-time="day" aria-pressed="true">Day <span>sunshine and butterflies</span></button>
+        <button type="button" class="preset" data-time="night" aria-pressed="false">Night <span>moon, crickets and fireflies</span></button>
       </div>
 
       <p class="group-label" id="moodLabel">Mood</p>
