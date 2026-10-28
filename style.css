@@ -209,6 +209,59 @@ body {
   mix-blend-mode: screen;
 }
 
+/* Night sky for the break: deep blue with a scattering of stars. It fades in
+   (--night, set by JS) as the sunset fades out, underneath the sunset layer. */
+#sky::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 8% 22%, #fff 0 1px, transparent 1.6px),
+    radial-gradient(circle at 17% 58%, rgba(255, 255, 255, 0.8) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 27% 14%, #fff 0 1.2px, transparent 1.8px),
+    radial-gradient(circle at 36% 40%, rgba(255, 255, 255, 0.7) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 46% 20%, #fff 0 1px, transparent 1.6px),
+    radial-gradient(circle at 58% 52%, rgba(255, 255, 255, 0.8) 0 1.2px, transparent 1.8px),
+    radial-gradient(circle at 66% 16%, #fff 0 1px, transparent 1.6px),
+    radial-gradient(circle at 75% 44%, rgba(255, 255, 255, 0.7) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 84% 24%, #fff 0 1.2px, transparent 1.8px),
+    radial-gradient(circle at 93% 56%, rgba(255, 255, 255, 0.8) 0 1px, transparent 1.6px),
+    linear-gradient(180deg, #0b1330 0%, #1d2a5a 60%, #425288 100%);
+  opacity: var(--night, 0);
+}
+
+/* The moon: a pale disc with a few soft craters. It crosses the sky during
+   the break, so the break has its own progress cue, just like the sun. */
+#moon {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  width: calc(var(--sun-size) * 0.85);
+  height: calc(var(--sun-size) * 0.85);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 62% 62%, rgba(140, 152, 190, 0.5) 0 9%, transparent 10%),
+    radial-gradient(circle at 34% 68%, rgba(140, 152, 190, 0.4) 0 6%, transparent 7%),
+    radial-gradient(circle at 58% 28%, rgba(140, 152, 190, 0.35) 0 5%, transparent 6%),
+    radial-gradient(circle at 36% 34%, #ffffff, #e9eefc 45%, #c3cdea 100%);
+  box-shadow: 0 0 calc(var(--sun-size) * 0.8) calc(var(--sun-size) * 0.22) rgba(190, 210, 255, 0.35);
+  will-change: transform;
+  transform: translate(-200px, -200px); /* off-screen until JS places it */
+}
+
+/* The water darkens to match the night sky (sits under the other pond layers) */
+#pond::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(30, 40, 100, 0.3), rgba(8, 14, 50, 0.62));
+  opacity: var(--night, 0);
+}
+
+.group-label { margin: 0 0 0.4rem; font-size: 0.85rem; opacity: 0.85; }
+
 /* ---------- SETUP PANEL ---------- */
 #setup {
   position: fixed;
@@ -229,7 +282,7 @@ body {
 #setup h1 { margin: 0 0 0.5rem; font-weight: 600; letter-spacing: 0.05em; }
 .intro { margin: 0 0 1.25rem; line-height: 1.5; opacity: 0.9; }
 
-.presets { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1.25rem; }
+.presets, .moods { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1.25rem; }
 .preset {
   flex: 1 1 8rem;
   padding: 0.6rem 0.75rem;

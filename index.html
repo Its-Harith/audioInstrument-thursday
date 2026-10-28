@@ -12,10 +12,12 @@
   <!-- Decorative water background (animated in CSS) -->
   <div id="water" aria-hidden="true"></div>
 
-  <!-- Sky band along the top. The sun crosses it during the study phase
-       and sets behind the water line when the break begins. -->
+  <!-- Sky band along the top. The sun crosses it during the study phase and
+       sets behind the water line when the break begins; then the moon crosses
+       it during the break and sets as the break ends. -->
   <div id="sky" aria-hidden="true">
     <div id="sun"></div>
+    <div id="moon"></div> <!-- crosses the sky during the break -->
     <div id="haze"></div> <!-- soft mist at the horizon so sky and water blend -->
   </div>
 
@@ -37,10 +39,17 @@
     <p class="intro">A lotus pond that grows while you focus. Listen to the harmony build, then play the pond during your break.</p>
 
     <form id="settings">
-      <div class="presets" role="group" aria-label="Timer presets">
+      <p class="group-label" id="timerLabel">Timer</p>
+      <div class="presets" role="group" aria-labelledby="timerLabel">
         <button type="button" class="preset" data-preset="pomodoro" aria-pressed="true">Pomodoro <span>25 / 5 min</span></button>
         <button type="button" class="preset" data-preset="long" aria-pressed="false">Long focus <span>50 / 10 min</span></button>
         <button type="button" class="preset" data-preset="demo" aria-pressed="false">Quick demo <span>15 / 15 sec</span></button>
+      </div>
+
+      <p class="group-label" id="moodLabel">Mood</p>
+      <div class="moods" role="group" aria-labelledby="moodLabel">
+        <button type="button" class="preset" data-mood="bright" aria-pressed="true">Bright <span>lively and clear</span></button>
+        <button type="button" class="preset" data-mood="mellow" aria-pressed="false">Mellow <span>soft and warm</span></button>
       </div>
 
       <div class="fields">
